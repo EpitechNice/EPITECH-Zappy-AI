@@ -5,15 +5,18 @@
 ## Makefile
 ##
 
-SRC	=	src/Main.cpp
+SRC	=	src/Main.cpp	\
+		src/Parser/Parser.cpp
 
 OBJ	=	$(SRC:.cpp=.o)
 
 NAME	=	zappy_ai
 
-CXXFLAGS	=	-Wall		\
-	 			-Wextra 	\
-				-std=c++20	\
+CXXFLAGS	=	-Wall			\
+	 			-Wextra 		\
+				-std=c++20		\
+				-I./include		\
+				-I./src/
 
 CC	=	g++
 

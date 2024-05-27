@@ -5,7 +5,14 @@
 ** Main
 */
 
-int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
+#include "Parser/Parser.hpp"
+
+int main(int argc, char *argv[])
 {
-    return 0;
+    try {
+        IA::Parser::ParseArgs(argc, argv);
+    } catch (const IA::Parser::ParsingError &e) {
+        std::cerr << e.what() << std::endl;
+        return 84;
+    }
 }

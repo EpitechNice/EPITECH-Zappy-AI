@@ -1,0 +1,5 @@
+*.o
+zappy_ai
+*.gcda
+*.gcno
+*~
