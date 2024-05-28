@@ -17,24 +17,42 @@ namespace IA {
         return _msg.c_str();
     }
 
-    int Parser::ParseArgs(int argc, char **argv)
+    Parser::Arguments Parser::ParseArgs(int argc, char **argv)
     {
         std::vector<std::string> helpFlags = {"-help", "--help", "-h"};
 
         switch (argc) {
             case 5:
-                break;
+                return getFlags(argc, argv);
             case 7:
-                break;
+                return getFlags(argc, argv);
             case 2:
                 if (std::find(helpFlags.begin(), helpFlags.end(), argv[1]) != helpFlags.end()) {
                     std::cout << "USAGE: ./zappy_ai -p port -n name -h machine" << std::endl;
-                    return 0;
+                    return {};
                 }
                 throw ParsingError("Invalid number of arguments");
             default:
                 throw ParsingError("Invalid number of arguments");
         }
-        return 0;
+    }
+
+    Parser::Arguments Parser::getFlags(int argc, char **argv)
+    {
+        Arguments args;
+
+        for (int i = 1; i < argc; i += 2) {
+            if (std::string(argv[i]) == "-p") {
+                args.port = std::stoi(argv[i + 1]);
+            } else if (std::string(argv[i]) == "-n") {
+                args.name = argv[i + 1];
+            } else if (std::string(argv[i]) == "-h") {
+                args.machine = argv[i + 1];
+            } else {
+                throw ParsingError("Invalid flag");
+            }
+        }
+        args.initialized = true;
+        return args;
     }
 }

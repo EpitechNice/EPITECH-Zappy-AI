@@ -26,6 +26,15 @@ namespace IA {
                     std::string _msg;
             };
 
-            static int ParseArgs(int argc, char **argv);
+            struct Arguments {
+                bool initialized = false;
+                int port;
+                std::string name;
+                std::string machine = "localhost";
+            };
+
+            static Arguments ParseArgs(int argc, char **argv);
+        private:
+            static Arguments getFlags(int argc, char **argv);
     };
 }
