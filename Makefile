@@ -20,13 +20,21 @@ CXXFLAGS	=	-Wall			\
 
 CC	=	g++
 
+ANGLE = "\u2514\u2500"
+
 GREEN = "\033[1;32m"
 YELLOW = "\033[1;33m"
 BLUE = "\033[1;34m"
 MAGENTA = "\033[1;35m"
 RESET = "\033[0m"
 
-all:	$(NAME)
+all:	start	$(NAME)
+
+start:
+	@echo -ne $(GREEN)
+	@echo -e "Starting compilation of" $(MAGENTA) $(NAME) $(RESET)
+	@echo -ne $(BLUE)
+	@echo -e "Compiling SRC..." $(RESET)
 
 $(NAME):	$(OBJ)
 	@$(CC) -o $(NAME) $(OBJ) $(CXXFLAGS)
@@ -45,11 +53,9 @@ fclean:	clean
 re:	fclean all
 
 %.o:	%.cpp
-	@echo -ne $(GREEN)
-	@echo -e "Compiling" $(BLUE) $< $(RESET)
-	$(CC) -c -o $@ $< $(CXXFLAGS)
-	@echo -ne $(GREEN)
-	@echo -e "Compiled" $(BLUE) $< $(RESET)
+	@echo -ne $(BLUE)
+	@echo -e "  " $(ANGLE) $(RESET) $<
+	@$(CC) -c -o $@ $< $(CXXFLAGS)
 
 debug:	CXXFLAGS += -g3
 debug:	re

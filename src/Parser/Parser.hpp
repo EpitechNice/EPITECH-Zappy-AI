@@ -33,8 +33,8 @@ namespace IA {
                 std::string machine = "localhost";
             };
 
-            static Arguments ParseArgs(int argc, char **argv);
+            [[nodiscard]] static Arguments ParseArgs(int argc, char **argv);
         private:
-            static Arguments getFlags(int argc, char **argv);
+            [[nodiscard]] static Arguments getFlags(int argc, char **argv);
     };
 }

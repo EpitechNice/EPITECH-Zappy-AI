@@ -46,7 +46,7 @@ namespace IA {
             if (std::string(argv[i]) == "-p") {
                 if (alreadySetPort)
                     throw ParsingError("Port already set");
-                args.port = std::stoi(argv[i + 1]);
+                args.port = std::stoi(argv[i + 1]); //TODO: @H4rdeol handle stoi exception
                 alreadySetPort = true;
             } else if (std::string(argv[i]) == "-n") {
                 if (alreadySetName)
