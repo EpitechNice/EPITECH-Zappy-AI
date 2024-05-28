@@ -40,14 +40,24 @@ namespace IA {
     Parser::Arguments Parser::getFlags(int argc, char **argv)
     {
         Arguments args;
+        bool alreadySetPort = false, alreadySetName = false, alreadySetMachine = false;
 
         for (int i = 1; i < argc; i += 2) {
             if (std::string(argv[i]) == "-p") {
+                if (alreadySetPort)
+                    throw ParsingError("Port already set");
                 args.port = std::stoi(argv[i + 1]);
+                alreadySetPort = true;
             } else if (std::string(argv[i]) == "-n") {
+                if (alreadySetName)
+                    throw ParsingError("Name already set");
                 args.name = argv[i + 1];
+                alreadySetName = true;
             } else if (std::string(argv[i]) == "-h") {
+                if (alreadySetMachine)
+                    throw ParsingError("Machine already set");
                 args.machine = argv[i + 1];
+                alreadySetMachine = true;
             } else {
                 throw ParsingError("Invalid flag");
             }
