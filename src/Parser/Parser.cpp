@@ -17,52 +17,100 @@ namespace IA {
         return _msg.c_str();
     }
 
-    Parser::Arguments Parser::ParseArgs(int argc, char **argv)
+    Parser &Parser::getInstance(const std::string &filepath)
     {
-        std::vector<std::string> helpFlags = {"-help", "--help", "-h"};
+        static Parser instance;
 
-        switch (argc) {
-            case 5:
-                return getFlags(argc, argv);
-            case 7:
-                return getFlags(argc, argv);
-            case 2:
-                if (std::find(helpFlags.begin(), helpFlags.end(), argv[1]) != helpFlags.end()) {
-                    std::cout << "USAGE: ./zappy_ai -p port -n name -h machine" << std::endl;
-                    return {};
-                }
-                throw ParsingError("Invalid number of arguments");
-            default:
-                throw ParsingError("Invalid number of arguments");
+        if (filepath.empty())
+            return instance;
+        instance._clearParsedArgs();
+        instance._openFile(filepath);
+        return instance;
+    }
+
+    void Parser::parseFile(int argc, char **argv)
+    {
+        std::string line;
+        size_t lineNb = 0;
+        std::string key;
+        std::string value;
+
+        _buildArgs(argc, argv);
+        _gotoStart(lineNb);
+        while (std::getline(_file, line)) {
+            _trimLine(line);
+            if (line == "}")    break;
+            if (line.empty())   continue;
+            if (line.find(':') == std::string::npos)
+                throw ParsingError("HardeoParser: Invalid syntax line: " + std::to_string(lineNb));
+            _parseValues(line, key);
+            lineNb++;
+        }
+        if (!_flagsFound)
+            throw ParsingError("HardeoParser: Missing key: flags");
+    }
+
+    void Parser::_openFile(const std::string &filepath)
+    {
+        if (!filepath.ends_with(".json"))
+            throw ParsingError("HardeoParser: File format not supported");
+        _file.open(filepath);
+        if (!_file.is_open() || !_file.good())
+            throw ParsingError("HardeoParser: Could not open file");
+    }
+
+    void Parser::_clearParsedArgs()
+    {
+        _parsedArgs.clear();
+    }
+
+    void Parser::_trimLine(std::string &line)
+    {
+        size_t start = line.find_first_not_of(" \t");
+        size_t end = line.find_last_not_of(" \t");
+
+        if (start == std::string::npos || end == std::string::npos)
+            line.clear();
+        else
+            line = line.substr(start, end - start + 1);
+    }
+
+    void Parser::_gotoStart(size_t &lineNb)
+    {
+        std::string line;
+
+        while (std::getline(_file, line)) {
+            _trimLine(line);
+            lineNb++;
+            if (line == "{")    break;
+        }
+        lineNb++;
+    }
+
+    void Parser::_buildArgs(int argc, char **argv)
+    {
+        for (size_t i = 1; (int)i < argc; i++) {
+            if (argv[i][0] != '-') {
+                i++;
+                continue;
+            }
+            _args[argv[i]] = argv[i + 1];
+            i++;
         }
     }
 
-    Parser::Arguments Parser::getFlags(int argc, char **argv)
+    void Parser::_parseValues(const std::string &line, const std::string &key)
     {
-        Arguments args;
-        bool alreadySetPort = false, alreadySetName = false, alreadySetMachine = false;
-
-        for (int i = 1; i < argc; i += 2) {
-            if (std::string(argv[i]) == "-p") {
-                if (alreadySetPort)
-                    throw ParsingError("Port already set");
-                args.port = std::stoi(argv[i + 1]); //TODO: @H4rdeol handle stoi exception
-                alreadySetPort = true;
-            } else if (std::string(argv[i]) == "-n") {
-                if (alreadySetName)
-                    throw ParsingError("Name already set");
-                args.name = argv[i + 1];
-                alreadySetName = true;
-            } else if (std::string(argv[i]) == "-h") {
-                if (alreadySetMachine)
-                    throw ParsingError("Machine already set");
-                args.machine = argv[i + 1];
-                alreadySetMachine = true;
-            } else {
-                throw ParsingError("Invalid flag");
-            }
+        if (key == "flags") {
+            if (_flagsFound)
+                throw ParsingError("HardeoParser: Duplicate key: " + key);
+            _flagsFound = true;
+        } else if (key == "usageFlags") {
+            return;
+        } else if (key == "usage") {
+            return;
+        } else {
+            throw ParsingError("HardeoParser: Invalid key: " + key);
         }
-        args.initialized = true;
-        return args;
     }
 }

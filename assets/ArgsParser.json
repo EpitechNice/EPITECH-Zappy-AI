@@ -1,0 +1,35 @@
+{
+    "flags": [
+        {
+            "flag": "-h",
+            "type": "string",
+            "mandatory": false
+        },
+        {
+            "flag": "-n",
+            "type": "string",
+            "mandatory": true
+        },
+        {
+            "flag": "-p",
+            "type": "int",
+            "mandatory": true
+        },
+        {
+            "flag": "-t",
+            "type": "string",
+            "mandatory": false,
+            "ValidValues": ["IA", "GRAPHIC"]
+        },
+        {
+            "flag": "-v",
+            "type": "int",
+            "mandatory": false,
+            "BannedValues": [0, 1, 2]
+        }
+    ],
+
+    "usageFlags": ["--help", "-help"],
+
+    "usage": "USAGE: ./zappy_ai -p port -n name -h machine"
+}
