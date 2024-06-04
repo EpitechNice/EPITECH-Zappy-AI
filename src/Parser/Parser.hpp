@@ -11,7 +11,7 @@
 #include <exception>
 #include <iostream>
 #include <algorithm>
-#include <vector>
+#include <unordered_map>
 
 namespace IA {
 
@@ -26,15 +26,7 @@ namespace IA {
                     std::string _msg;
             };
 
-            struct Arguments {
-                bool initialized = false;
-                int port;
-                std::string name;
-                std::string machine = "localhost";
-            };
-
-            [[nodiscard]] static Arguments ParseArgs(int argc, char **argv);
-        private:
-            [[nodiscard]] static Arguments getFlags(int argc, char **argv);
+            private:
+                std::unordered_map<std::string, std::string> _args;
     };
 }
