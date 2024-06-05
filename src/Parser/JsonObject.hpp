@@ -10,12 +10,25 @@
 #include <unordered_map>
 #include <string>
 #include <variant>
+#include <vector>
+#include <any>
+#include <tuple>
 
 class JsonObject {
     public:
-        JsonObject();
-        ~JsonObject() = default;
+        enum class Type {
+            INT,
+            DOUBLE,
+            FLOAT,
+            BOOL,
+            OBJECT
+        };
 
+        JsonObject() = default;
+        ~JsonObject() = default;
     private:
-        std::unordered_map<std::string, std::variant<int, double, float, bool, std::string>> _json;
+        std::unordered_map<std::string,
+            std::variant<int, double, float,
+            bool, std::string, JsonObject,
+            std::tuple<std::vector<std::any>, Type>>> _obj;
 };

@@ -19,13 +19,13 @@
             "flag": "-t",
             "type": "string",
             "mandatory": false,
-            "ValidValues": ["IA", "GRAPHIC"]
+            "ValidValuesSet": ["IA", "GRAPHIC"]
         },
         {
             "flag": "-v",
             "type": "int",
             "mandatory": false,
-            "BannedValues": [0, 1, 2]
+            "BannedValuesSet": [0, 1, 2]
         }
     ],
 

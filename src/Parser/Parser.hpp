@@ -12,6 +12,7 @@
 #include <any>
 #include <unordered_map>
 #include <fstream>
+#include <algorithm>
 #include <functional>
 #include "Macro.h"
 
