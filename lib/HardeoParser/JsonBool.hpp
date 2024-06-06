@@ -12,7 +12,11 @@
 namespace JSON {
     class JsonBool: public AJsonValues<bool>{
         public:
-            JsonBool() = default;
+            JsonBool(bool value)
+            {
+                this->value = value;
+            }
+
             ~JsonBool() override = default;
     };
 }

@@ -12,7 +12,11 @@
 namespace JSON {
     class JsonDouble: public AJsonValues<double> {
         public:
-            JsonDouble() = default;
+            JsonDouble(double value)
+            {
+                this->value = value;
+            }
+
             ~JsonDouble() override = default;
     };
 }

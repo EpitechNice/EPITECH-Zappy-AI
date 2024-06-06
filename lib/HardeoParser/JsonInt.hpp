@@ -12,7 +12,11 @@
 namespace JSON {
     class JsonInt: public AJsonValues<int> {
         public:
-            JsonInt() = default;
+            JsonInt(int value)
+            {
+                this->value = value;
+            }
+
             ~JsonInt() override = default;
     };
 }

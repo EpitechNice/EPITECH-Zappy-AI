@@ -21,6 +21,8 @@ namespace JSON {
 
         private:
             std::unique_ptr<IJsonValues> _getValues(std::ifstream &file);
+            std::unique_ptr<IJsonValues> _handleArray(std::ifstream &file);
+            std::unique_ptr<IJsonValues> _handleNumbers(std::ifstream &file);
         private:
             std::unordered_map<std::string, std::unique_ptr<IJsonValues>> _values;
     };

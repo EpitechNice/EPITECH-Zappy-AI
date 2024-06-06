@@ -31,5 +31,7 @@
 
     "usageFlags": ["--help", "-help"],
 
-    "usage": "USAGE: ./zappy_ai -p port -n name -h machine"
+    "usage": "USAGE: ./zappy_ai -p port -n name -h machine",
+
+    "test": 34
 }

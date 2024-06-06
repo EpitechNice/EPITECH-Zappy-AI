@@ -14,5 +14,6 @@ namespace JSON {
 
         file.get();
         std::getline(file, str, '"');
+        this->value = str;
     }
 }
