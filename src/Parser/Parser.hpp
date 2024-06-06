@@ -7,14 +7,13 @@
 
 #pragma once
 
+#include "Macro.h"
+
 #include <string>
 #include <exception>
-#include <any>
-#include <unordered_map>
-#include <fstream>
+#include <iostream>
 #include <algorithm>
-#include <functional>
-#include "Macro.h"
+#include <vector>
 
 namespace IA {
 
@@ -29,22 +28,15 @@ namespace IA {
                     std::string _msg;
             };
 
-            ~Parser() = default;
-            static Parser &getInstance(const std::string &filepath = "");
-            void parseFile(int argc, char **argv);
+            struct Arguments {
+                bool initialized = false;
+                int port;
+                std::string name;
+                std::string machine = "localhost";
+            };
 
-            private:
-                Parser() = default;
-                void _openFile(const std::string &filepath);
-                void _clearParsedArgs();
-                void _trimLine(std::string &line);
-                void _gotoStart(size_t &lineNb);
-                void _buildArgs(int argc, char **argv);
-                void _parseValues(const std::string &line, const std::string &key);
-            private:
-                std::unordered_map<std::string, std::any> _parsedArgs;
-                std::unordered_map<std::string, std::string> _args;
-                std::ifstream _file;
-                bool _flagsFound = false;
+            static Arguments ParseArgs(int argc, char **argv);
+        private:
+            static Arguments getFlags(int argc, char **argv);
     };
 }
