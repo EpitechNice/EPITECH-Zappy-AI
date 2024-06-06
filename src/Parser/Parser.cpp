@@ -37,17 +37,7 @@ namespace IA {
 
         _buildArgs(argc, argv);
         _gotoStart(lineNb);
-        while (std::getline(_file, line)) {
-            _trimLine(line);
-            if (line == "}")    break;
-            if (line.empty())   continue;
-            if (line.find(':') == std::string::npos)
-                throw ParsingError("HardeoParser: Invalid syntax line: " + std::to_string(lineNb));
-            _parseValues(line, key);
-            lineNb++;
-        }
-        if (!_flagsFound)
-            throw ParsingError("HardeoParser: Missing key: flags");
+
     }
 
     void Parser::_openFile(const std::string &filepath)

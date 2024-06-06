@@ -18,5 +18,7 @@ namespace JSON {
             }
 
             ~JsonBool() override = default;
+
+            void parse(__attribute__((unused)) std::ifstream &file) override {};
     };
 }

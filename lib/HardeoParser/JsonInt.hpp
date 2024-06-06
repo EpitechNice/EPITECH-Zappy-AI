@@ -18,5 +18,7 @@ namespace JSON {
             }
 
             ~JsonInt() override = default;
+
+            void parse(__attribute__((unused)) std::ifstream &file) override {};
     };
 }

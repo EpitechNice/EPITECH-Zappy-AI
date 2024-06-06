@@ -15,5 +15,7 @@ namespace JSON {
         public:
             JsonString(std::ifstream &file);
             ~JsonString() override = default;
+
+            void parse(std::ifstream &file) override;
     };
 }

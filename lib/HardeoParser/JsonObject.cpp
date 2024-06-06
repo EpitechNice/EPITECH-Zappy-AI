@@ -7,6 +7,7 @@
 
 #include "Utils.hpp"
 #include "JsonObject.hpp"
+#include "JsonArray.hpp"
 #include "JsonString.hpp"
 #include "JsonInt.hpp"
 #include "JsonDouble.hpp"
@@ -75,7 +76,10 @@ namespace JSON {
 
     std::unique_ptr<IJsonValues> JsonObject::_handleArray(std::ifstream &file)
     {
-        return nullptr;
+        std::unique_ptr<JsonArray<std::string>> arr = std::make_unique<JsonArray<std::string>>();
+
+        arr->parse(file);
+        return arr;
     }
 
     std::unique_ptr<IJsonValues> JsonObject::_handleNumbers(std::ifstream &file)

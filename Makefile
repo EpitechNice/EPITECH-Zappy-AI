@@ -12,11 +12,14 @@ OBJ	=	$(SRC:.cpp=.o)
 
 NAME	=	zappy_ai
 
-CXXFLAGS	=	-Wall			\
-	 			-Wextra 		\
-				-std=c++20		\
-				-I./include		\
-				-I./src/
+CXXFLAGS	=	-Wall					\
+	 			-Wextra 				\
+				-std=c++20				\
+				-I./include				\
+				-I./src/				\
+				-I./lib/HardeoParser	\
+				-Llib					\
+				-lHardeoParser
 
 CC	=	g++
 
@@ -31,6 +34,11 @@ RESET = "\033[0m"
 all:	start	$(NAME)
 
 start:
+	@echo -ne $(MAGENTA)
+	@echo -e "Lib compilation..." $(RESET)
+	@make -sC lib/HardeoParser
+	@echo -ne $(GREEN)
+	@echo -e "Lib compiled" $(RESET)
 	@echo -ne $(GREEN)
 	@echo -e "Starting compilation of" $(MAGENTA) $(NAME) $(RESET)
 	@echo -ne $(BLUE)
@@ -44,11 +52,13 @@ $(NAME):	$(OBJ)
 clean:
 	@echo -ne $(YELLOW)
 	@echo -e "Cleaning repository..." $(RESET)
+	@make -sC lib/HardeoParser clean
 	@rm -f $(OBJ)
 	@rm -f *~
 
 fclean:	clean
 	@rm -f $(NAME)
+	@make -sC lib/HardeoParser fclean
 
 re:	fclean all
 

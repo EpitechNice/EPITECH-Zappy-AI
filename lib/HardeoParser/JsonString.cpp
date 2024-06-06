@@ -16,4 +16,9 @@ namespace JSON {
         std::getline(file, str, '"');
         this->value = str;
     }
+
+    void JsonString::parse(__attribute__((unused)) std::ifstream &file)
+    {
+        return;
+    }
 }
