@@ -23,7 +23,6 @@ namespace IA {
 
         switch (argc) {
             case 5:
-                return getFlags(argc, argv);
             case 7:
                 return getFlags(argc, argv);
             case 2:
@@ -31,7 +30,6 @@ namespace IA {
                     std::cout << "USAGE: ./zappy_ai -p port -n name -h machine" << std::endl;
                     return {};
                 }
-                throw ParsingError("Invalid number of arguments");
             default:
                 throw ParsingError("Invalid number of arguments");
         }
