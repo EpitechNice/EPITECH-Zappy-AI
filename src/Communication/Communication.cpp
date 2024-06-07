@@ -32,4 +32,20 @@ namespace IA {
         if (connect(_socket, (struct sockaddr *)&_server_addr, sizeof(_server_addr)) < 0)
             throw CommunicationError("Error: connection failed");
     }
+
+    void Communication::receiveData()
+    {
+        char buffer[1024] = {0};
+        int valread = read(_socket, buffer, 1024);
+
+        if (valread == -1)
+            throw CommunicationError("Error: read failed");
+        std::cout << buffer << std::endl;
+    }
+
+    void Communication::sendData(const std::string &data)
+    {
+        if (send(_socket, data.c_str(), data.size(), 0) == -1)
+            throw CommunicationError("Error: send failed");
+    }
 }
