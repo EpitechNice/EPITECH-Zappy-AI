@@ -9,10 +9,15 @@
 #include "Macro.h"
 #include <iostream>
 
-int main(UNUSED int argc, UNUSED char *argv[])
+int main(int argc, char *argv[])
 {
     try {
-        IA::Parser::getInstance("assets/ArgsParser.json").parseFile(argc, argv);
+        IA::Parser::Arguments parsedArgs = IA::Parser::ParseArgs(argc, argv);
+        if (!parsedArgs.initialized)
+            return SUCCESS;
+        std::cout << "Port: " << parsedArgs.port << std::endl;
+        std::cout << "Name: " << parsedArgs.name << std::endl;
+        std::cout << "Machine: " << parsedArgs.machine << std::endl;
     } catch (const IA::Parser::ParsingError &e) {
         std::cerr << RED << BOLD
                   << e.what() << RESET << std::endl;
