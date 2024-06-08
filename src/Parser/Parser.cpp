@@ -30,6 +30,7 @@ namespace IA {
                     std::cout << "USAGE: ./zappy_ai -p port -n name -h machine" << std::endl;
                     return {};
                 }
+                throw ParsingError("Invalid number of arguments");
             default:
                 throw ParsingError("Invalid number of arguments");
         }

@@ -31,19 +31,15 @@ RESET = "\033[0m"
 all:	start	$(NAME)
 
 start:
-	@echo -ne $(GREEN)
-	@echo -e "Starting compilation of" $(MAGENTA) $(NAME) $(RESET)
-	@echo -ne $(BLUE)
-	@echo -e "Compiling SRC..." $(RESET)
+	@echo $(GREEN) "Starting compilation of" $(MAGENTA) $(NAME) $(RESET)
+	@echo $(BLUE) "Compiling SRC..." $(RESET)
 
 $(NAME):	$(OBJ)
 	@$(CC) -o $(NAME) $(OBJ) $(CXXFLAGS)
-	@echo -ne $(GREEN)
-	@echo -e "Compiled" $(MAGENTA) $(NAME) $(RESET)
+	@echo $(GREEN) "Compiled" $(MAGENTA) $(NAME) $(RESET)
 
 clean:
-	@echo -ne $(YELLOW)
-	@echo -e "Cleaning repository..." $(RESET)
+	@echo $(YELLOW) "Cleaning repository..." $(RESET)
 	@rm -f $(OBJ)
 	@rm -f *~
 
@@ -53,8 +49,7 @@ fclean:	clean
 re:	fclean all
 
 %.o:	%.cpp
-	@echo -ne $(BLUE)
-	@echo -e "  " $(ANGLE) $(RESET) $<
+	@echo $(BLUE) "  " $(ANGLE) $(RESET) $<
 	@$(CC) -c -o $@ $< $(CXXFLAGS)
 
 debug:	CXXFLAGS += -g3
