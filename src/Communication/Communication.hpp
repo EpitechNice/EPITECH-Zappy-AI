@@ -30,7 +30,7 @@ namespace IA
             Communication(const std::string &ip, const int port);
             ~Communication() = default;
 
-            void receiveData();
+            std::string receiveData();
             void sendData(const std::string &data);
         private:
             std::string _ip;

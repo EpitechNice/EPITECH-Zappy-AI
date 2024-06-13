@@ -1,4 +1,3 @@
-#include "Communication.hpp"
 /*
 ** EPITECH PROJECT, 2024
 ** B-YEP-400-NCE-4-1-zappy-clement.piasco [WSL: Ubuntu]
@@ -33,14 +32,14 @@ namespace IA {
             throw CommunicationError("Error: connection failed");
     }
 
-    void Communication::receiveData()
+    std::string Communication::receiveData()
     {
-        char buffer[1024] = {0};
-        int valread = read(_socket, buffer, 1024);
+        char buffer[4096] = {0};
+        int valread = read(_socket, buffer, 4096);
 
         if (valread == -1)
             throw CommunicationError("Error: read failed");
-        std::cout << buffer << std::endl;
+        return std::string(buffer);
     }
 
     void Communication::sendData(const std::string &data)
