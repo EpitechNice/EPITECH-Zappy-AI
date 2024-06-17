@@ -32,7 +32,9 @@ namespace IA {
             void connectToServer(const std::string &ip, const int port);
             void join(const std::string &team);
             void doAction(const std::string &action, bool ignoreResp = true, bool useBackslashN = true);
-
+            void waitFriends();
+            void wander(bool refreshLook, bool onlyFood);
+            bool handleBroadcast();
         private:
             int _id;
             int _idMax;
@@ -41,6 +43,8 @@ namespace IA {
             int _maxTicksNeeded = 0;
             int _nbChilds = 0;
             int _childsTarget = 0;
+            size_t _nbFriends = 0;
+            bool _enoughfriends = false;
             std::string _team;
             std::pair<size_t, size_t> _mapSize;
             std::unique_ptr<IA::Communication> _communication;
