@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
         IA::Parser::Arguments parsedArgs = IA::Parser::ParseArgs(argc, argv);
         if (!parsedArgs.initialized)
             return SUCCESS;
-        
     } catch (const IA::Parser::ParsingError &e) {
         std::cerr << RED << BOLD
                   << e.what() << RESET << std::endl;
@@ -27,4 +26,5 @@ int main(int argc, char *argv[])
                   << e.what() << RESET << std::endl;
         return ERROR;
     }
+    return SUCCESS;
 }

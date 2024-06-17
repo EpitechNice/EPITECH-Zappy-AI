@@ -17,19 +17,33 @@ namespace IA {
         return _msg.c_str();
     }
 
-    Communication::Communication(const std::string &ip, const int port)
+    Communication::Communication(std::queue<std::pair<int, std::string>> &queue): _queue(queue)
+    {}
+
+    void Communication::connectToServer(const std::string &ip, const int port)
     {
-        _ip = ip;
+        struct sockaddr_in server_addr;
+
         _port = port;
+        _ip = ip;
         _socket = socket(AF_INET, SOCK_STREAM, 0);
         if (_socket == -1)
             throw CommunicationError("Error: socket creation failed");
-        _server_addr.sin_family = AF_INET;
-        _server_addr.sin_port = htons(port);
-        if (inet_pton(AF_INET, ip.c_str(), &_server_addr.sin_addr) <= 0)
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        if (inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr) <= 0)
             throw CommunicationError("Error: invalid address");
-        if (connect(_socket, (struct sockaddr *)&_server_addr, sizeof(_server_addr)) < 0)
+        if (connect(_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
             throw CommunicationError("Error: connection failed");
+    }
+
+    Communication::~Communication()
+    {
+        std::cout << "Disconnected from "
+                  << _ip << " port "
+                  << _port << std::endl;
+        shutdown(_socket, SHUT_RDWR);
+        close(_socket);
     }
 
     std::string Communication::receiveData()

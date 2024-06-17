@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <memory>
+#include <queue>
 
 namespace IA
 {
@@ -22,20 +23,21 @@ namespace IA
             class CommunicationError : public std::exception {
                 public:
                     CommunicationError(const std::string &msg) : _msg(msg) {}
-                    const char *what() const noexcept { return _msg.c_str(); }
+                    [[nodiscard]] const char *what() const noexcept { return _msg.c_str(); }
                 private:
                     std::string _msg;
             };
 
-            Communication(const std::string &ip, const int port);
-            ~Communication() = default;
+            Communication(std::queue<std::pair<int, std::string>> &queue);
+            ~Communication();
 
-            std::string receiveData();
+            void connectToServer(const std::string &ip, const int port);
+            [[nodiscard]] std::string receiveData();
             void sendData(const std::string &data);
         private:
-            std::string _ip;
             int _port;
             int _socket;
-            struct sockaddr_in _server_addr;
+            std::string _ip;
+            std::queue<std::pair<int, std::string>> &_queue;
     };
 }
