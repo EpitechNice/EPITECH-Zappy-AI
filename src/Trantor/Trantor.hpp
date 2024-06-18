@@ -41,6 +41,7 @@ namespace IA {
             void wander(bool refreshWorld, bool eat);
             void getItems();
             void getFood(int nbFood);
+            void waitOrders(std::string &msg, const std::string &waitingFor);
             [[nodiscard]] bool handleBroadcast();
             [[nodiscard]] int getNbrOfItemsNeeded(const std::string &itemName, int available) const;
             [[nodiscard]] double progressionPercentage() const;

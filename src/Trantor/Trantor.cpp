@@ -40,22 +40,22 @@ namespace IA {
 
     void Trantor::join(const std::string &team)
     {
-        std::string data = _communication->receiveData();
+        std::string data = _communication->receiveData(true, 10);
 
         if (data != JOIN_GAME)
             throw TrantorException("Invalid server response");
         _team = team;
         doAction(_team);
-        data = _communication->receiveData();
+        data = _communication->receiveData(true, 10);
         while (data == KO) {
             doAction(team);
-            data = _communication->receiveData();
+            data = _communication->receiveData(true, 10);
             sleep(1);
         }
         _id = std::stoi(data);
         _maxSlots = _id;
         _idMax = _id;
-        data = _communication->receiveData();
+        data = _communication->receiveData(true, 10);
         if (data.find(' ') == std::string::npos)
             throw TrantorException("Invalid map size format");
         if (sscanf(data.c_str(), "%zu %zu", &_mapSize.first, &_mapSize.second) != 2)
@@ -94,7 +94,23 @@ namespace IA {
         }
         if (ignoreResp)
             return;
-        (void)_communication->receiveData();
+        (void)_communication->receiveData(true, 5);
+    }
+
+    void Trantor::waitOrders(std::string &msg, const std::string &waitingFor)
+    {
+        std::string msg = "";
+        std::string parsedMsg = "";
+
+        while (parsedMsg.find(waitingFor) == std::string::npos) {
+            msg = _communication->receiveData(false);
+            parsedMsg = msg;
+            if (msg.find("message") != std::string::npos) {
+                parsedMsg = msg.substr(11);
+                parsedMsg.erase(std::remove(parsedMsg.begin(), parsedMsg.end(), '\n'), parsedMsg.end());
+            }
+        }
+        msg = msg.substr(0, msg.find(",")) + " " + parsedMsg;
     }
 
     void Trantor::waitFriends()
@@ -125,7 +141,7 @@ namespace IA {
                 nbFood--;
             }
             for (int i = 0; i < nbStep; i++) {
-                std::string msg = _communication->receiveData();
+                std::string msg = _communication->receiveData(true, 10);
                 if (msg == OK) {
                     _inventory.add("food");
                     _ticks += 126;
@@ -150,7 +166,7 @@ namespace IA {
             int elemToGet = getNbrOfItemsNeeded(elem.first, _target.second.get(elem.first));
             for (int i = 0; i < elemToGet; i++) {
                 doAction("Take " + elem.first);
-                auto msg = _communication->receiveData();
+                auto msg = _communication->receiveData(true, 10);
                 if (msg == OK) {
                     _inventory.add(elem.first);
                     doAction("Broadcast J'ai loot du " + elem.first, false);
@@ -194,7 +210,7 @@ namespace IA {
         if (refreshWorld) {
             doAction("Look");
             while (msg[0] != '[')
-                msg = _communication->receiveData();
+                msg = _communication->receiveData(true, 10);
             _worldInfo = msg;
         }
         _manageObjective(eat);

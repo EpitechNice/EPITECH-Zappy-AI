@@ -32,7 +32,7 @@ namespace IA
             ~Communication();
 
             void connectToServer(const std::string &ip, const int port);
-            [[nodiscard]] std::string receiveData();
+            [[nodiscard]] std::string receiveData(bool setInQueue, int tryAgain = 0);
             void sendData(const std::string &data);
         private:
             int _port;
