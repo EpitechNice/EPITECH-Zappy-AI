@@ -8,11 +8,16 @@
 #pragma once
 
 #include "Communication/Communication.hpp"
+#include "Inventory/Inventory.hpp"
+
 #include <cmath>
+#include <functional>
 #include <map>
 
 #define JOIN_GAME "WELCOME\n"
 #define KO "ko\n"
+#define DEAD "dead\n"
+#define OK "ok\n"
 
 namespace IA {
     class Trantor {
@@ -33,8 +38,15 @@ namespace IA {
             void join(const std::string &team);
             void doAction(const std::string &action, bool ignoreResp = true, bool useBackslashN = true);
             void waitFriends();
-            void wander(bool refreshLook, bool onlyFood);
-            bool handleBroadcast();
+            void wander(bool refreshWorld, bool eat);
+            void getItems();
+            void getFood(int nbFood);
+            [[nodiscard]] bool handleBroadcast();
+            [[nodiscard]] int getNbrOfItemsNeeded(const std::string &itemName, int available) const;
+            [[nodiscard]] double progressionPercentage() const;
+
+        private:
+            void _manageObjective(bool eat);
         private:
             int _id;
             int _idMax;
@@ -43,9 +55,15 @@ namespace IA {
             int _maxTicksNeeded = 0;
             int _nbChilds = 0;
             int _childsTarget = 0;
+            size_t _onSamePlace = 0;
             size_t _nbFriends = 0;
-            bool _enoughfriends = false;
+            bool _enoughFriends = false;
+            bool _isFull = false;
+            bool _isRetired = false;
+            Inventory _inventory;
             std::string _team;
+            std::string _worldInfo;
+            std::pair<size_t, Inventory> _target;
             std::pair<size_t, size_t> _mapSize;
             std::unique_ptr<IA::Communication> _communication;
             std::queue<std::pair<int, std::string>> _queue;

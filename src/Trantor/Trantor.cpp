@@ -100,132 +100,249 @@ namespace IA {
     void Trantor::waitFriends()
     {
         _childsTarget = 0;
-        while (_nbFriends < 10 && !_enoughfriends) {
+        while (_nbFriends < 10 && !_enoughFriends) {
             handleBroadcast();
             wander(true, true);
         }
-        _enoughfriends = true;
+        _enoughFriends = true;
         doAction("Broadcast Tous le monde est là", false);
     }
 
-    void Trantor::wander(bool refreshLook, bool onlyFood)
+    void Trantor::getFood(int nbFood)
     {
-        static int timeWondered = 0;
-        static int maxMapSize = std::max(_mapSize.first, _mapSize.second);
-        timeWondered++;
-        if (timeWondered > maxMapSize)
-        {
-            perform("Left", false);
-            perform("Forward", false);
-            perform("Right", false);
-            timeWondered = 0;
-        }
-        perform("Forward", false);
-        if (refreshLook)
-        {
-            perform("Look");
-            std::string msg = "";
-            while (msg.c_str()[0] != '[')
-            {
-                msg = _socket->receive();
+        int neededTicks = _maxTicksNeeded - _ticks;
+        int nb = std::ceil(nbFood / 10.0);
+        int nbStep = 0;
+
+        if (_ticks >= _maxTicksNeeded)
+            return;
+        if (nbFood * 126 > neededTicks)
+            nbFood = std::ceil(neededTicks / 126.0);
+        for (int i = 0; i < nb; i++) {
+            nbStep = std::min(10, nbFood);
+            for (int i = 0; i < nbStep; i++) {
+                doAction("Take food");
+                nbFood--;
             }
-            _lastLooked = msg;
+            for (int i = 0; i < nbStep; i++) {
+                std::string msg = _communication->receiveData();
+                if (msg == OK) {
+                    _inventory.add("food");
+                    _ticks += 126;
+                }
+            }
         }
-        auto cCellStr = _lastLooked.find(",") == std::string::npos ? _lastLooked : _lastLooked.substr(0, _lastLooked.find(","));
-        auto cCell = Inventory(cCellStr, true);
-        _targetCell.second = cCell;
-        if (onlyFood)
-        {
-            if (cCell.get("food"))
-                pickupFood(cCell.get("food"));
+    }
+
+    int Trantor::getNbrOfItemsNeeded(const std::string &itemName, int available) const
+    {
+        int needed = _inventory.getRemainingValue(itemName);
+
+        if (available == 0)
+            return 0;
+        return std::min(needed, available);
+    }
+
+    void Trantor::getItems()
+    {
+        getFood(_target.second.get("food"));
+        for (auto &elem : _inventory) {
+            int elemToGet = getNbrOfItemsNeeded(elem.first, _target.second.get(elem.first));
+            for (int i = 0; i < elemToGet; i++) {
+                doAction("Take " + elem.first);
+                auto msg = _communication->receiveData();
+                if (msg == OK) {
+                    _inventory.add(elem.first);
+                    doAction("Broadcast J'ai loot du " + elem.first, false);
+                    if (progressionPercentage() >= 1.0) {
+                        _isFull = true;
+                        return;
+                    }
+                }
+            }
         }
-        else
-        {
-            purgeResources();
+    }
+
+    void Trantor::_manageObjective(bool eat)
+    {
+        std::string str = _worldInfo.find(",") == std::string::npos ? _worldInfo : _worldInfo.substr(0, _worldInfo.find(","));
+        Inventory cellInventory = Inventory(str, true);
+
+        _target.second = cellInventory;
+        if (eat) {
+            if (cellInventory.get("food"))
+                getFood(cellInventory.get("food"));
+        } else {
+            getItems();
         }
+    }
+
+    void Trantor::wander(bool refreshWorld, bool eat)
+    {
+        static int time = 0;
+        static int longextAxis = std::max(_mapSize.first, _mapSize.second);
+        std::string msg = "";
+
+        time++;
+        if (time > longextAxis) {
+            doAction("Left", false);
+            doAction("Forward", false);
+            doAction("Right", false);
+            time = 0;
+        }
+        doAction("Forward", false);
+        if (refreshWorld) {
+            doAction("Look");
+            while (msg[0] != '[')
+                msg = _communication->receiveData();
+            _worldInfo = msg;
+        }
+        _manageObjective(eat);
+    }
+
+    double Trantor::progressionPercentage() const
+    {
+        double totalPercent = 0.0;
+        int nbItems = 0;
+
+        for (auto const &[key, value]: _inventory) {
+            if (key == "food" || perfectInv.find(key) == perfectInv.end())
+                continue;
+            int total = perfectInv.at(key);
+            int current = std::min(value, total);
+            totalPercent += current / total;
+            nbItems++;
+        }
+        return totalPercent / nbItems;
     }
 
     bool Trantor::handleBroadcast()
     {
-        bool changed = false;
+        static const std::unordered_map<std::string, std::function<void(const std::string &msg)>> actions = {
+            {"Travail terminéééé", [this](const std::string &msg)
+                {
+                   _isFull = true;
+                   _isRetired = true;
+                }
+            },
+            {"Faut faire des gosses ?", [this](const std::string &msg)
+                {
+                    if (!_childsTarget) {
+                        doAction("Broadcast C'est bon on a les allocs !", false);
+                    } else {
+                        int remains = std::min(0, 12 - (11 - _maxSlots + _childsTarget));
+                        remains = std::max(0, remains);
+                        doAction("Broadcast Toujours plus il manque " + std::to_string(remains) + " gosses !", false);
+                    }
+                }
+            },
+            {"Tous le monde est là", [this](const std::string &msg)
+                {
+                    _enoughFriends = true;
+                }
+            },
+            {"Mon ID max est ", [this](const std::string &msg)
+                {
+                    int tmpMaxInt = std::atoi(msg.c_str() + 15);
+
+                    if (tmpMaxInt >= _idMax) {
+                        _idMax = tmpMaxInt;
+                    } else {
+                        doAction("Broadcast T'es tarpin con c'est " + std::to_string(_idMax), false);
+                    }
+                }
+            },
+            {"T'es tarpin con c'est ", [this](const std::string &msg)
+                {
+                    int tmpMaxInt = std::atoi(msg.c_str() + 22);
+
+                    _idMax = std::max(_idMax, tmpMaxInt);
+                }
+            },
+            {"Je suis seul", [this](const std::string &msg)
+                {
+                    _nbFriends++;
+                    if (_nbFriends > 1) {
+                        doAction("Broadcast Tu dis du n'importe quoi on est " + std::to_string(_nbFriends), false);
+                    }
+                }
+            },
+            {"Tu dis du n'importe quoi on est ", [this](const std::string &msg)
+                {
+                    size_t tmp = std::atoi(msg.c_str() + 32);
+
+                    _nbFriends = std::max(_nbFriends, tmp);
+                }
+            },
+            {"C'est bon on a les allocs !", [this](const std::string &msg)
+                {
+                    _childsTarget = 0;
+                }
+            },
+            {"Toujours plus il manque ", [this](const std::string &msg)
+                {
+                    _childsTarget = std::atoi(msg.c_str() + 24);
+                }
+            },
+            {"J'ai loot du ", [this](const std::string &msg)
+                {
+                    std::string elem = msg.substr(13);
+
+                    _inventory.add(elem);
+                    if (progressionPercentage() >= 1.0) {
+                        _isFull = true;
+                    }
+                }
+            },
+            {"On a ce qui faut", [this](const std::string &msg)
+                {
+                    _isFull = true;
+                }
+            },
+            {"Faut loot un truc ?", [this](const std::string &msg)
+                {
+                    if (_isFull) {
+                        doAction("Broadcast On a ce qui faut", false);
+                    }
+                }
+            },
+            {"Coucou", [this](const std::string &msg)
+                {
+                    if (_idMax == _id)
+                        _onSamePlace++;
+                }
+            },
+            {"J'ai fais un enfant", [this](const std::string &msg)
+                {
+                    _id++;
+                    _idMax++;
+                }
+            },
+            {"ALEEEEEEED", [this](const std::string &msg)
+                {
+                    _isFull = true;
+                }
+            }
+        };
 
         while (!_queue.empty()) {
             auto &[soudDir, msg] = _queue.back();
             _queue.pop();
-            auto soundMsg = msg.c_str() + 11;
-            auto messageStr = Cryptic::decrypt(std::string(soundMsg).replace(std::string(soundMsg).find("\n"), 1, ""), _teamName);
-            if (messageStr.find("J'ai chope du ") != std::string::npos) {
-                auto elem = messageStr.substr(14);
+            std::string message = msg.replace(msg.find('\n'), 1, "").c_str() + 11;
+            if (message.find("J'ai loot du ") != std::string::npos) {
+                std::string elem = message.substr(13);
                 _inventory.add(elem);
-                if (checkAdvancement() >= 1.0)
+                if (progressionPercentage() >= 1.0)
                 {
-                    isFull = true;
+                    _isFull = true;
                     return true;
                 }
-            } else if (messageStr.find("On a finiiii") != std::string::npos) {
-                isFull = true;
-                allFinished = true;
-            } else if (messageStr.find("On a besoin de partisants ?") != std::string::npos) {
-                if (!_forkTarget)
-                {
-                    perform("Broadcast Non c'est bon on est assez", false);
-                }
-                else
-                {
-                    int remains = std::min(0, 12 - (getNeededComrades() + _forkTarget));
-                    remains = std::max(0, remains);
-                    perform("Broadcast Bien sur que oui on a besoin de " + std::to_string(remains) + " partisants", false);
-                }
-            } else if (messageStr.find("On est tous làà") != std::string::npos) {
-                enoughComrades = true;
-            } else if (messageStr.find("Pour moi mon id max c'est ") != std::string::npos) {
-                int tmpMaxInt = std::atoi(messageStr.c_str() + 26);
-                if (tmpMaxInt >= _idMax)
-                {
-                    std::cout << "\tPrevious idmax: " << _idMax;
-                    std::cout << "\tTmp idmax: " << messageStr.c_str() + 26;
-                    std::cout << "\tNew idmax: " << tmpMaxInt << std::endl;
-                    _idMax = tmpMaxInt;
-                }
-                else
-                {
-                    perform("Broadcast Nonon debilus l'id max est " + std::to_string(_idMax), false);
-                }
-            } else if (messageStr.find("Nonon debilus l'id max est ") != std::string::npos) {
-                int tmpMaxInt = std::atoi(messageStr.c_str() + 27);
-                _idMax = std::max(_idMax, tmpMaxInt);
-            } else if (messageStr.find("Pour moi on est ") != std::string::npos) {
-                auto tmpMax = messageStr.c_str() + 16;
-                _nbAllies++;
-                int tmpMaxInt = std::atoi(tmpMax);
-                if (tmpMaxInt < _nbAllies)
-                {
-                    perform("Broadcast Mais bien evidemment que non toto on est " + std::to_string(_nbAllies), false);
-                }
-            } else if (messageStr.find("Mais bien evidemment que non toto on est ") != std::string::npos) {
-                int tmpMaxInt = std::atoi(messageStr.c_str() + 41);
-                _nbAllies = std::max(_nbAllies, tmpMaxInt);
-            } else if (messageStr.find("Non c'est bon on est assez") != std::string::npos) {
-                _forkTarget = 0;
-            } else if (messageStr.find("Bien sur que oui on a besoin de ") != std::string::npos) {
-                _forkTarget = std::atoi(messageStr.c_str() + 32);
-            } else if (messageStr.find("Nan plus besoin dcailloux") != std::string::npos) {
-                isFull = true;
-            } else if (messageStr.find("On a besoin de cailloux lo ?") != std::string::npos) {
-                if (isFull)
-                {
-                    perform("Broadcast Nan plus besoin dcailloux", false);
-                }
-            } else if (messageStr.find("I am here") != std::string::npos) {
-                if (_idMax == _id)
-                    _joinedAllies++;
-            } else if (messageStr.find("Jviens de pondre") != std::string::npos) {
-                _id++;
-                _idMax++;
-            } else if (messageStr.find("rejoignez moiiiii") != std::string::npos) {
-                isFull = true;
+            } else {
+                for (auto const &[key, action] : actions)
+                    if (message.find(key) != std::string::npos)
+                        action(message);
             }
         }
-        return changed;
+        return false;
     }
 }
