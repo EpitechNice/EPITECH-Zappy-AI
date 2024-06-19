@@ -142,6 +142,16 @@ namespace IA {
         return _makeChoice(res);
     }
 
+    std::pair<int, Inventory> Trantor::getTarget() const
+    {
+        return _target;
+    }
+
+    int Trantor::getNbFriends() const
+    {
+        return _nbFriends + 1;
+    }
+
     void Trantor::join(const std::string &team)
     {
         std::string data = _communication->receiveData(true, 256);
@@ -240,10 +250,10 @@ namespace IA {
             {"Incantation", 300}
         };
         std::string actionName = action.substr(0, action.find(' '));
-        auto performedAction = costs.find(actionName);
+        auto doing = costs.find(actionName);
 
-        if (performedAction != costs.end()) {
-            _ticks -= performedAction->second;
+        if (doing != costs.end()) {
+            _ticks -= doing->second;
         }
         if (actionName == "Broadcast") {
             std::string data = action.substr(action.find(' ') + 1);
@@ -309,9 +319,19 @@ namespace IA {
         }
     }
 
+    void Trantor::setTick(const int tick)
+    {
+        _ticks = tick;
+    }
+
+    int Trantor::getTicks() const
+    {
+        return _ticks;
+    }
+
     int Trantor::getNbrOfItemsNeeded(const std::string &itemName, int available) const
     {
-        int needed = _inventory.getRemainingValue(itemName);
+        int needed = _inventory.getNeededValue(itemName);
 
         if (available == 0)
             return 0;

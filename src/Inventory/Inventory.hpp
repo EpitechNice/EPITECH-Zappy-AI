@@ -30,84 +30,15 @@ namespace IA {
             ~Inventory() = default;
 
             void add(const std::string &item, int nb = 1);
-            int get(const std::string &elem) const
-            {
-                if (_inventory.find(elem) == _inventory.end())
-                    return (0);
-                return (_inventory.at(elem));
-            }
-
-            std::unordered_map<std::string, int>::iterator begin()
-            {
-                return (_inventory.begin());
-            }
-
-            std::unordered_map<std::string, int>::iterator end()
-            {
-                return (_inventory.end());
-            }
-
-            std::unordered_map<std::string, int>::const_iterator begin() const
-            {
-                return (_inventory.begin());
-            }
-
-            std::unordered_map<std::string, int>::const_iterator end() const
-            {
-                return (_inventory.end());
-            }
-
-            int getRemainingValue(const std::string &elem) const
-            {
-                if (!perfectInv.contains(elem))
-                    return (0);
-                int current = get(elem);
-                int needed = perfectInv.at(elem);
-                if (current >= needed)
-                    return (0);
-                return (needed - current);
-            }
-
-            int getNeededValue(const std::string &elem) const
-            {
-                if (perfectInv.find(elem) == perfectInv.end())
-                    return (0);
-                int current = get(elem);
-                int needed = perfectInv.at(elem);
-                if (current >= needed)
-                    return (0);
-                return (needed - current);
-            }
-
-            double getTotalValue(const Inventory &inv) const
-            {
-                static const std::map<std::string, double> importances = {
-                    {"linemate", remap(0.384615385)},
-                    {"deraumere", remap(0.192307692)},
-                    {"sibur", remap(0.128205128)},
-                    {"mendiane", remap(0.128205128)},
-                    {"phiras", remap(0.102564103)},
-                    {"thystame", remap(0.064102564)}};
-                double weightedTotal = 0.0;
-                for (auto &elem : _inventory)
-                {
-                    int needed = inv.getNeededValue(elem.first);
-                    if (needed == 0)
-                        continue;
-                    int stoneAvailable = std::min(needed, elem.second);
-                    weightedTotal += stoneAvailable * importances.at(elem.first);
-                }
-                return weightedTotal;
-            }
+            int get(const std::string &elem) const;
+            std::unordered_map<std::string, int>::iterator begin();
+            std::unordered_map<std::string, int>::iterator end();
+            std::unordered_map<std::string, int>::const_iterator begin() const;
+            std::unordered_map<std::string, int>::const_iterator end() const;
+            int getNeededValue(const std::string &elem) const;
+            double getTotalValue(const Inventory &inv) const;
         private:
-            double remap(double x, double bias = 0.75) const
-            {
-                double k = std::pow(1.0 - bias, 3);
-
-                x = 1.0 - x;
-                return (x * k) / (x * k - x + 1.0);
-            }
-
+            double _recalculateWeight(double x, double bias = 0.75) const;
         private:
             std::unordered_map<std::string, int> _inventory;
     };

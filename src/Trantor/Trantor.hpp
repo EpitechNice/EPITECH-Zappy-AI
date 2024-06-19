@@ -46,11 +46,14 @@ namespace IA {
             void waitOrders(std::string &msg, const std::string &waitingFor);
             void meetUp();
             void goToTarget();
+            void setTick(const int tick);
             [[nodiscard]] bool handleBroadcast();
             [[nodiscard]] int updateObjectives();
             [[nodiscard]] int getNbrOfItemsNeeded(const std::string &itemName, int available) const;
+            [[nodiscard]] int getTicks() const;
+            [[nodiscard]] int getNbFriends() const;
             [[nodiscard]] double progressionPercentage() const;
-
+            [[nodiscard]] std::pair<int, Inventory> getTarget() const;
         private:
             void _fillMoves(std::list<std::string> &res, int &currentX, int &currentY);
             void _applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb);
