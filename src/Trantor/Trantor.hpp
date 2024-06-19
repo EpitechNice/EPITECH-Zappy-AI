@@ -11,8 +11,10 @@
 #include "Inventory/Inventory.hpp"
 
 #include <cmath>
+#include <list>
 #include <functional>
 #include <map>
+#include <regex>
 
 #define JOIN_GAME "WELCOME\n"
 #define KO "ko\n"
@@ -42,12 +44,20 @@ namespace IA {
             void getItems();
             void getFood(int nbFood);
             void waitOrders(std::string &msg, const std::string &waitingFor);
+            void meetUp();
+            void goToTarget();
             [[nodiscard]] bool handleBroadcast();
+            [[nodiscard]] int updateObjectives();
             [[nodiscard]] int getNbrOfItemsNeeded(const std::string &itemName, int available) const;
             [[nodiscard]] double progressionPercentage() const;
 
         private:
+            void _fillMoves(std::list<std::string> &res, int &currentX, int &currentY);
+            void _applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb);
             void _manageObjective(bool eat);
+            int _makeChoice(std::vector<std::pair<int, Inventory>> &res);
+            [[nodiscard]] std::queue<std::pair<int, std::string>> _removeUselessAled();
+            [[nodiscard]] bool _haveToMove(std::string &msg, const int dir, char *buf);
         private:
             int _id;
             int _idMax;
@@ -61,6 +71,7 @@ namespace IA {
             bool _enoughFriends = false;
             bool _isFull = false;
             bool _isRetired = false;
+            bool _inGroup = false;
             Inventory _inventory;
             std::string _team;
             std::string _worldInfo;

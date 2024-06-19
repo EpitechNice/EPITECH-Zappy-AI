@@ -8,6 +8,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <map>
+#include <cmath>
 #include <algorithm>
 
 namespace IA {
@@ -64,6 +66,46 @@ namespace IA {
                 if (current >= needed)
                     return (0);
                 return (needed - current);
+            }
+
+            int getNeededValue(const std::string &elem) const
+            {
+                if (perfectInv.find(elem) == perfectInv.end())
+                    return (0);
+                int current = get(elem);
+                int needed = perfectInv.at(elem);
+                if (current >= needed)
+                    return (0);
+                return (needed - current);
+            }
+
+            double getTotalValue(const Inventory &inv) const
+            {
+                static const std::map<std::string, double> importances = {
+                    {"linemate", remap(0.384615385)},
+                    {"deraumere", remap(0.192307692)},
+                    {"sibur", remap(0.128205128)},
+                    {"mendiane", remap(0.128205128)},
+                    {"phiras", remap(0.102564103)},
+                    {"thystame", remap(0.064102564)}};
+                double weightedTotal = 0.0;
+                for (auto &elem : _inventory)
+                {
+                    int needed = inv.getNeededValue(elem.first);
+                    if (needed == 0)
+                        continue;
+                    int stoneAvailable = std::min(needed, elem.second);
+                    weightedTotal += stoneAvailable * importances.at(elem.first);
+                }
+                return weightedTotal;
+            }
+        private:
+            double remap(double x, double bias = 0.75) const
+            {
+                double k = std::pow(1.0 - bias, 3);
+
+                x = 1.0 - x;
+                return (x * k) / (x * k - x + 1.0);
             }
 
         private:

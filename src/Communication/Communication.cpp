@@ -46,7 +46,7 @@ namespace IA {
         close(_socket);
     }
 
-    std::string Communication::receiveData()
+    std::string Communication::receiveData(bool setInQueue, int tryAgain = 0)
     {
         char buffer[4096] = {0};
         int valread = read(_socket, buffer, 4096);

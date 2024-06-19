@@ -38,6 +38,110 @@ namespace IA {
         _communication->connectToServer(ip, port);
     }
 
+    std::queue<std::pair<int, std::string>> Trantor::_removeUselessAled()
+    {
+        std::queue<std::pair<int, std::string>> newQueue;
+
+        while (!_queue.empty()) {
+            auto &[dir, msg] = _queue.front();
+            if (msg.find("ALEEEEEEED") == std::string::npos)
+                newQueue.push({dir, msg});
+            _queue.pop();
+        }
+        return newQueue;
+    }
+
+    bool Trantor::_haveToMove(std::string &msg, const int dir, char *buf)
+    {
+        const static std::unordered_map<int, std::pair<int, std::string>> possibleMove = {
+            {1, {1, "Forward\n"}},
+            {2, {1, "Forward\n"}},
+            {3, {2, "Left\nForward\n"}},
+            {4, {2, "Left\nForward\n"}},
+            {5, {3, "Left\nLeft\nForward\n"}},
+            {6, {2, "Right\nForward\n"}},
+            {7, {2, "Right\nForward\n"}},
+            {8, {1, "Forward\n"}}
+        };
+        const std::pair<int, std::string> move = possibleMove.at(dir);
+
+        msg.clear();
+        _isFull = true;
+        waitOrders(msg, "ALEEEEEEED");
+        sscanf(msg.c_str(), "message %d, %s\n", &dir, buf);
+        if (dir == 0) {
+            _inGroup = true;
+            doAction("Broadcast Coucou", false);
+            return true;
+        }
+        doAction(move.second, true, false);
+        for (int i = 0; i < move.first; i++) {
+            while (msg.find(OK) == std::string::npos)
+                msg = _communication->receiveData(false, 0);
+            _queue = _removeUselessAled();
+        }
+        return false;
+    }
+
+    void Trantor::meetUp()
+    {
+        std::string msg = "";
+        int dir = 0;
+        char buffer[256] = {0};
+
+        waitOrders(msg, "ALEEEEEEED");
+        while (!_inGroup) {
+            sscanf(msg.c_str(), "message %d, %s\n", &dir, buffer);
+            if (dir == 0) {
+                _inGroup = true;
+                doAction("Broadcast Coucou", false);
+            } else if (_haveToMove(msg, dir, buffer))
+                break;
+            waitOrders(msg, "ALEEEEEEED");
+        }
+    }
+
+    int Trantor::_makeChoice(std::vector<std::pair<int, Inventory>> &res)
+    {
+        auto to_remove = std::remove_if(res.begin(), res.end(), [this](const auto &a)
+            {
+                return a.second.getTotalValue(_inventory) <= 0.0001 || a.first == 0;
+            }
+        );
+        res.erase(to_remove, res.end());
+        if (res.size() == 0)
+            return 0;
+        std::sort(res.begin(), res.end(), [this](const auto &a, const auto &b)
+            {
+                return a.second.getTotalValue(_inventory) > b.second.getTotalValue(_inventory);
+            }
+        );
+        _target = res.front();
+        return 1;
+    }
+
+    int Trantor::updateObjectives()
+    {
+        static const std::regex regex = std::regex("([A-Za-z ]+(?= |,))|(?=,[ ]*,)");
+
+        doAction("Look");
+        std::string msg = _communication->receiveData(true, 10);
+        _worldInfo = msg;
+        std::smatch match;
+        std::vector<std::pair<int, Inventory>> res;
+        int i = 0;
+        while (std::regex_search(msg, match, regex)) {
+            res.emplace_back(std::pair(i, Inventory(match[1], true)));
+            if (match[1].length()) {
+                msg = match.suffix();
+            } else {
+                msg = msg.c_str() + 1;
+            }
+            i++;
+        }
+        return _makeChoice(res);
+    }
+
     void Trantor::join(const std::string &team)
     {
         std::string data = _communication->receiveData(true, 10);
@@ -62,6 +166,61 @@ namespace IA {
             throw TrantorException("Invalid map size format");
         doAction("Broadcast Je suis seul", false);
         doAction("Broadcast Mon ID max est " + std::to_string(_id), false);
+    }
+
+    void Trantor::_fillMoves(std::list<std::string> &res, int &currentX, int &currentY)
+    {
+        currentX = currentX < 0 ? -currentX : currentX;
+        int totalMoves = currentX + currentY + (currentX > 0);
+        double nbSteps = std::ceil(totalMoves / 10.0);
+
+        for (int i = 0; i < currentY; i++)
+            res.push_back("Forward");
+        if (currentX) {
+            if (currentX < 0)
+                res.push_back("Left");
+            else
+                res.push_back("Right");
+        }
+        for (int i = 0; i < currentX; i++)
+            res.push_back("Forward");
+    }
+
+    void Trantor::_applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb)
+    {
+        int nbMoves = 0;
+
+        for (int i = 0; i < nbSteps; i++) {
+            nbMoves = std::min(10, allMovesNb);
+            for (int i = 0; i < nbMoves; i++) {
+                doAction(moves.front());
+                allMovesNb--;
+                moves.pop_front();
+            }
+            for (int i = 0; i < nbMoves; i++)
+                std::string msg = _communication->receiveData(true, 10);
+        }
+    }
+
+    void Trantor::goToTarget()
+    {
+        int tmpI = _target.first, offset = 1, currentX = -1, currentY = 1;
+        std::list<std::string> moves;
+
+        while (tmpI) {
+            if (currentX >= offset) {
+                offset++;
+                currentY++;
+                currentX = -offset;
+            } else {
+                currentX++;
+            }
+            tmpI--;
+        }
+        _fillMoves(moves, currentX, currentY);
+        int allMovesNb = currentX + currentY + (currentX > 0);
+        double nbSteps = std::ceil(allMovesNb / 10.0);
+        _applyMove(moves, nbSteps, allMovesNb);
     }
 
     void Trantor::doAction(const std::string &action, bool ignoreResp, bool useBackslashN)
