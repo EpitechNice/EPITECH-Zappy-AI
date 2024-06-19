@@ -16,6 +16,8 @@
 #include <memory>
 #include <queue>
 
+#define DEAD "dead"
+
 namespace IA
 {
     class Communication {
@@ -34,6 +36,8 @@ namespace IA
             void connectToServer(const std::string &ip, const int port);
             [[nodiscard]] std::string receiveData(bool setInQueue, int tryAgain = 0);
             void sendData(const std::string &data);
+        private:
+            std::string _handleMessage(bool setInQueue, int tryAgain, const std::string &str);
         private:
             int _port;
             int _socket;

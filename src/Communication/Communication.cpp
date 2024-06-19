@@ -46,13 +46,41 @@ namespace IA {
         close(_socket);
     }
 
+    std::string Communication::_handleMessage(bool setInQueue, int tryAgain, const std::string &str)
+    {
+        char buf[1024] = {0};
+        int soudDir = 0;
+
+        sscanf(str.c_str(), "message %d, %s\n", &soudDir, buf);
+        if (setInQueue) {
+            if (_queue.size()) {
+                std::pair<int, std::string> &front = _queue.front();
+                if (front.first == soudDir && front.second == buf) {
+                    if (tryAgain == 0)
+                        return "";
+                    return receiveData(setInQueue, tryAgain - 1);
+                }
+            }
+            _queue.push(std::pair(soudDir, str));
+        }
+        if (tryAgain == 0)
+            return setInQueue ? "" : str;
+        return receiveData(setInQueue, tryAgain - 1);
+    }
+
     std::string Communication::receiveData(bool setInQueue, int tryAgain = 0)
     {
         char buffer[4096] = {0};
         int valread = read(_socket, buffer, 4096);
+        std::string str;
 
-        if (valread == -1)
+        if (valread == -1 || tryAgain == -1)
             throw CommunicationError("Error: read failed");
+        str = std::string(buffer);
+        if (str.find(DEAD) != std::string::npos)
+            throw CommunicationError("Tranto has been killed");
+        if (str.find("message ") != std::string::npos)
+            return _handleMessage(setInQueue, tryAgain, str);
         return std::string(buffer);
     }
 
