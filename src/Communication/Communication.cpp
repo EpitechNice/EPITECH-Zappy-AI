@@ -74,7 +74,7 @@ namespace IA {
         int valread = read(_socket, buffer, 4096);
         std::string str;
 
-        if (valread == -1 || tryAgain == -1)
+        if (valread == -1 || tryAgain < 0)
             throw CommunicationError("Error: read failed");
         str = std::string(buffer);
         if (str.find(DEAD) != std::string::npos)
