@@ -19,7 +19,9 @@ CXXFLAGS	=	-Wall					\
 	 			-Wextra 				\
 				-std=c++20				\
 				-I./include				\
-				-I./src/
+				-I./src/				\
+				-O3						\
+				-Ofast
 
 CC	=	g++
 

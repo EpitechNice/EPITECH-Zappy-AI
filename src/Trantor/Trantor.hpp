@@ -9,14 +9,13 @@
 
 #include "Communication/Communication.hpp"
 #include "Inventory/Inventory.hpp"
+#include "Macro.h"
 
 #include <cmath>
 #include <list>
 #include <functional>
 #include <map>
 #include <regex>
-
-#include "Macro.h"
 
 #define JOIN_GAME "WELCOME\n"
 #define KO "ko\n"
@@ -62,8 +61,6 @@ namespace IA {
             [[nodiscard]] double progressionPercentage() const;
             [[nodiscard]] std::pair<int, Inventory> getTarget() const;
 
-            static void harvest(Trantor &trantor);
-            static void groupTrantor(Trantor &trantor);
         private:
             void _fillMoves(std::list<std::string> &res, int &currentX, int &currentY);
             void _applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb);
@@ -72,6 +69,15 @@ namespace IA {
             int _howMany();
             [[nodiscard]] std::queue<std::pair<int, std::string>> _removeUselessAled();
             [[nodiscard]] bool _haveToMove(std::string &msg, int dir, char *buf);
+
+            static void _harvest(Trantor &trantor);
+            static void _groupTrantor(Trantor &trantor);
+            static void _guardsPos(Trantor &robot);
+            static void _guardAction(Trantor &trantor);
+            static void _clearComms(Trantor &trantor);
+            static void _tryLvlUp(Trantor &trantor, int idT);
+            static void _giveBirth(Trantor &robot);
+            static int _getNbofIncantations(Trantor &trantor);
         private:
             int _id;
             int _idMax;

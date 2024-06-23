@@ -163,7 +163,7 @@ namespace IA {
         return _target;
     }
 
-    void Trantor::harvest(Trantor &trantor)
+    void Trantor::_harvest(Trantor &trantor)
     {
         trantor.doAction("Broadcast Faut loot un truc ?", false);
         while (!trantor._isFull) {
@@ -178,7 +178,7 @@ namespace IA {
         }
     }
 
-    void Trantor::groupTrantor(Trantor &trantor)
+    void Trantor::_groupTrantor(Trantor &trantor)
     {
         while (true) {
             if (trantor._idMax == trantor._id) {
@@ -192,6 +192,103 @@ namespace IA {
                 trantor.meetUp();
         }
         trantor.dropAll("");
+    }
+
+    void Trantor::_guardsPos(Trantor &trantor)
+    {
+        int nbrOfBodyguards = 4;
+        int id = trantor._idMax - trantor._id;
+        std::string msg = "";
+
+        trantor.clearQueue();
+        if (id < 4) {
+            for (int i = 0; i < id; i++)
+                trantor.waitOrders(msg, "Je vous protègerez");
+            trantor.findGuard();
+            trantor.doAction("Broadcast Je vous protègerez", false);
+        } else {
+            for (int i = 0; i < nbrOfBodyguards; i++)
+                trantor.waitOrders(msg, "Je vous protègerez");
+        }
+    }
+
+    void Trantor::_guardAction(Trantor &trantor)
+    {
+        while (!trantor._isRetired) {
+            trantor.doAction("Eject");
+            (void)trantor._communication->receiveData(true, 256);
+            trantor.handleBroadcast();
+        }
+    }
+
+    void Trantor::_clearComms(Trantor &trantor)
+    {
+        while (trantor._communication->nbBytesToRead() > 0)
+            trantor._communication->receiveData(true);
+        trantor.clearQueue();
+    }
+
+    void Trantor::_tryLvlUp(Trantor &trantor, int idT)
+    {
+        int nbIncantations = _getNbofIncantations(trantor);
+        bool finished = false;
+
+        if (trantor._idMax - trantor._id == idT) {
+            _clearComms(trantor);
+            for (int i = 0; i < nbIncantations; i++) {
+                trantor.doAction("Incantation");
+                std::string msg = "";
+                while (msg.find("Current level:") == std::string::npos &&
+                    msg.find("ko") == std::string::npos)
+                    msg = trantor._communication->receiveData(true, 256);
+            }
+            trantor.doAction("Broadcast Travail terminéééé", false);
+        } else {
+            int lvl = 0;
+            while (lvl < nbIncantations && !finished) {
+                std::string msg = trantor._communication->receiveData(false);
+                if (msg.find("message") != std::string::npos) {
+                    msg = msg.substr(11);
+                    if (msg.find("Travail terminéééé") != std::string::npos)
+                        finished = true;
+                }
+                if (msg.find("Current level:") != std::string::npos)
+                    lvl++;
+            }
+        }
+    }
+
+    int Trantor::_getNbofIncantations(Trantor &trantor)
+    {
+        int nbComrades = trantor.getNbFriends();
+        static const std::map<int, int> incantantionWithFriends = {
+            {1, 1},
+            {2, 3},
+            {4, 5},
+            {6, 7}
+        };
+
+        for (auto i = incantantionWithFriends.rbegin(); i != incantantionWithFriends.rend(); i++)
+            if (nbComrades >= i->first)
+                return i->second;
+        return 0;
+    }
+
+    void Trantor::_giveBirth(Trantor &trantor)
+    {
+        const double childPerTrantor = std::max((10 - trantor.getNbFriends()) / trantor.getNbFriends(), 1);
+        int nbr = trantor._idMax == trantor._id ? std::ceil(childPerTrantor) : std::floor(childPerTrantor);
+
+        for (int i = 0; i < nbr; i++) {
+            trantor.doAction("Fork", false);
+            trantor._idMax++;
+            trantor._id++;
+            trantor.doAction("Broadcast J'ai fais un enfant", false);
+        }
+        while (trantor.getNbFriends() < 10) {
+            trantor.handleBroadcast();
+            trantor.wander(true, true);
+        }
     }
 
     int Trantor::getNbFriends() const
