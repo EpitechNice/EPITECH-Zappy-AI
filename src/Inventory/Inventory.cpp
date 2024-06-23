@@ -76,7 +76,7 @@ namespace IA {
 
     void Inventory::remove(const std::string &elem, size_t nb)
     {
-        if (_inventory[elem] >= nb)
+        if (static_cast<size_t>(_inventory[elem]) >= nb)
             _inventory[elem] -= nb;
     }
 

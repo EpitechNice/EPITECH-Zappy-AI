@@ -6,8 +6,9 @@
 */
 
 #include "Parser/Parser.hpp"
-#include "Communication/Communication.hpp"
+#include "Trantor/Trantor.hpp"
 #include "Macro.h"
+
 #include <iostream>
 
 int main(int argc, char *argv[])
@@ -16,6 +17,9 @@ int main(int argc, char *argv[])
         IA::Parser::Arguments parsedArgs = IA::Parser::ParseArgs(argc, argv);
         if (!parsedArgs.initialized)
             return SUCCESS;
+        IA::Trantor trantor;
+        trantor.connectToServer(parsedArgs.machine, parsedArgs.port);
+        trantor.join(parsedArgs.name);
     } catch (const IA::Parser::ParsingError &e) {
         std::cerr << RED << BOLD
                   << e.what() << RESET << std::endl;

@@ -11,12 +11,13 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <cstring>
 #include <memory>
 #include <queue>
 
-#define DEAD "dead"
+#define DEAD_NO_BACKN "dead"
 
 namespace IA
 {
@@ -24,8 +25,8 @@ namespace IA
         public:
             class CommunicationError : public std::exception {
                 public:
-                    CommunicationError(const std::string &msg) : _msg(msg) {}
-                    [[nodiscard]] const char *what() const noexcept { return _msg.c_str(); }
+                    CommunicationError(const std::string &msg);
+                    [[nodiscard]] const char *what() const noexcept;
                 private:
                     std::string _msg;
             };
@@ -35,6 +36,7 @@ namespace IA
 
             void connectToServer(const std::string &ip, const int port);
             [[nodiscard]] std::string receiveData(bool setInQueue, int tryAgain = 0);
+            [[nodiscard]] size_t nbBytesToRead() const;
             void sendData(const std::string &data);
         private:
             std::string _handleMessage(bool setInQueue, int tryAgain, const std::string &str);

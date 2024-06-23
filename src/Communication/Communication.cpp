@@ -68,7 +68,7 @@ namespace IA {
         return receiveData(setInQueue, tryAgain - 1);
     }
 
-    std::string Communication::receiveData(bool setInQueue, int tryAgain = 0)
+    std::string Communication::receiveData(bool setInQueue, int tryAgain)
     {
         char buffer[4096] = {0};
         int valread = read(_socket, buffer, 4096);
@@ -77,7 +77,7 @@ namespace IA {
         if (valread == -1 || tryAgain < 0)
             throw CommunicationError("Error: read failed");
         str = std::string(buffer);
-        if (str.find(DEAD) != std::string::npos)
+        if (str.find(DEAD_NO_BACKN) != std::string::npos)
             throw CommunicationError("Tranto has been killed");
         if (str.find("message ") != std::string::npos)
             return _handleMessage(setInQueue, tryAgain, str);
@@ -88,5 +88,10 @@ namespace IA {
     {
         if (send(_socket, data.c_str(), data.size(), 0) == -1)
             throw CommunicationError("Error: send failed");
+    }
+
+    size_t Communication::nbBytesToRead() const
+    {
+        return ioctl(_socket, FIONREAD);
     }
 }

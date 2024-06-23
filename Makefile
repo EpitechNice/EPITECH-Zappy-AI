@@ -5,8 +5,11 @@
 ## Makefile
 ##
 
-SRC	=	src/Main.cpp	\
-		src/Parser/Parser.cpp
+SRC	=	src/Main.cpp						\
+		src/Parser/Parser.cpp				\
+		src/Communication/Communication.cpp	\
+		src/Inventory/Inventory.cpp			\
+		src/Trantor/Trantor.cpp
 
 OBJ	=	$(SRC:.cpp=.o)
 

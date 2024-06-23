@@ -23,7 +23,7 @@ namespace IA {
         size_t longestAxis = std::max(_mapSize.first, _mapSize.second);
         double diag = std::ceil(longestAxis * std::sqrt(2)) + longestAxis;
 
-        _communication = std::make_unique<IA::Communication>();
+        _communication = std::make_unique<IA::Communication>(_queue);
         _maxTicksNeeded = 2520 + diag * 7;
     }
 
@@ -51,7 +51,7 @@ namespace IA {
         return newQueue;
     }
 
-    bool Trantor::_haveToMove(std::string &msg, const int dir, char *buf)
+    bool Trantor::_haveToMove(std::string &msg, int dir, char *buf)
     {
         const static std::unordered_map<int, std::pair<int, std::string>> possibleMove = {
             {1, {1, "Forward\n"}},
@@ -120,6 +120,22 @@ namespace IA {
         return 1;
     }
 
+    int Trantor::_howMany()
+    {
+        std::string response;
+        std::regex regex("player");
+        std::smatch match;
+
+        doAction("Look");
+        do
+            response = _communication->receiveData(true, 256);
+        while (response == OK);
+        for (int i = 0; i < 2; i++)
+            response = response.substr(response.find(","));
+        std::regex_search(response, match, regex);
+        return match.size();
+    }
+
     int Trantor::updateObjectives()
     {
         static const std::regex regex = std::regex("([A-Za-z ]+(?= |,))|(?=,[ ]*,)");
@@ -145,6 +161,37 @@ namespace IA {
     std::pair<int, Inventory> Trantor::getTarget() const
     {
         return _target;
+    }
+
+    void Trantor::harvest(Trantor &trantor)
+    {
+        trantor.doAction("Broadcast Faut loot un truc ?", false);
+        while (!trantor._isFull) {
+            trantor.handleBroadcast();
+            if (trantor.updateObjectives() == 0) {
+                trantor.wander(false, false);
+            } else {
+                trantor.goToTarget();
+                trantor.getItems();
+            }
+            trantor.handleBroadcast();
+        }
+    }
+
+    void Trantor::groupTrantor(Trantor &trantor)
+    {
+        while (true) {
+            if (trantor._idMax == trantor._id) {
+                trantor.doAction("Broadcast ALEEEEEEED", false);
+                while (trantor._communication->nbBytesToRead() > 0)
+                    (void)trantor._communication->receiveData(true, 0);
+                trantor.handleBroadcast();
+                if (trantor._onSamePlace >= trantor._nbFriends)
+                    break;
+            } else
+                trantor.meetUp();
+        }
+        trantor.dropAll("");
     }
 
     int Trantor::getNbFriends() const
@@ -181,8 +228,6 @@ namespace IA {
     void Trantor::_fillMoves(std::list<std::string> &res, int &currentX, int &currentY)
     {
         currentX = currentX < 0 ? -currentX : currentX;
-        int totalMoves = currentX + currentY + (currentX > 0);
-        double nbSteps = std::ceil(totalMoves / 10.0);
 
         for (int i = 0; i < currentY; i++)
             res.push_back("Forward");
@@ -318,14 +363,14 @@ namespace IA {
 
     void Trantor::waitOrders(std::string &msg, const std::string &waitingFor)
     {
-        std::string msg = "";
+        std::string str = "";
         std::string parsedMsg = "";
 
         while (parsedMsg.find(waitingFor) == std::string::npos) {
-            msg = _communication->receiveData(false);
-            parsedMsg = msg;
-            if (msg.find("message") != std::string::npos) {
-                parsedMsg = msg.substr(11);
+            str = _communication->receiveData(false);
+            parsedMsg = str;
+            if (str.find("message") != std::string::npos) {
+                parsedMsg = str.substr(11);
                 parsedMsg.erase(std::remove(parsedMsg.begin(), parsedMsg.end(), '\n'), parsedMsg.end());
             }
         }
@@ -341,6 +386,20 @@ namespace IA {
         }
         _enoughFriends = true;
         doAction("Broadcast Tous le monde est là", false);
+    }
+
+    void Trantor::findGuard()
+    {
+        const int player = _howMany();
+
+        if (player == 0) {
+            doAction("Forward");
+            (void)_communication->receiveData(false);
+        } else {
+            doAction("Left");
+            (void)_communication->receiveData(false);
+            findGuard();
+        }
     }
 
     void Trantor::getFood(int nbFood)
@@ -464,13 +523,13 @@ namespace IA {
     bool Trantor::handleBroadcast()
     {
         static const std::unordered_map<std::string, std::function<void(const std::string &msg)>> actions = {
-            {"Travail terminéééé", [this](const std::string &msg)
+            {"Travail terminéééé", [this](UNUSED const std::string &msg)
                 {
                    _isFull = true;
                    _isRetired = true;
                 }
             },
-            {"Faut faire des gosses ?", [this](const std::string &msg)
+            {"Faut faire des gosses ?", [this](UNUSED const std::string &msg)
                 {
                     if (!_childsTarget) {
                         doAction("Broadcast C'est bon on a les allocs !", false);
@@ -481,7 +540,7 @@ namespace IA {
                     }
                 }
             },
-            {"Tous le monde est là", [this](const std::string &msg)
+            {"Tous le monde est là", [this](UNUSED const std::string &msg)
                 {
                     _enoughFriends = true;
                 }
@@ -504,7 +563,7 @@ namespace IA {
                     _idMax = std::max(_idMax, tmpMaxInt);
                 }
             },
-            {"Je suis seul", [this](const std::string &msg)
+            {"Je suis seul", [this](UNUSED const std::string &msg)
                 {
                     _nbFriends++;
                     if (_nbFriends > 1) {
@@ -519,7 +578,7 @@ namespace IA {
                     _nbFriends = std::max(_nbFriends, tmp);
                 }
             },
-            {"C'est bon on a les allocs !", [this](const std::string &msg)
+            {"C'est bon on a les allocs !", [this](UNUSED const std::string &msg)
                 {
                     _childsTarget = 0;
                 }
@@ -539,31 +598,31 @@ namespace IA {
                     }
                 }
             },
-            {"On a ce qui faut", [this](const std::string &msg)
+            {"On a ce qui faut", [this](UNUSED const std::string &msg)
                 {
                     _isFull = true;
                 }
             },
-            {"Faut loot un truc ?", [this](const std::string &msg)
+            {"Faut loot un truc ?", [this](UNUSED const std::string &msg)
                 {
                     if (_isFull) {
                         doAction("Broadcast On a ce qui faut", false);
                     }
                 }
             },
-            {"Coucou", [this](const std::string &msg)
+            {"Coucou", [this](UNUSED const std::string &msg)
                 {
                     if (_idMax == _id)
                         _onSamePlace++;
                 }
             },
-            {"J'ai fais un enfant", [this](const std::string &msg)
+            {"J'ai fais un enfant", [this](UNUSED const std::string &msg)
                 {
                     _id++;
                     _idMax++;
                 }
             },
-            {"ALEEEEEEED", [this](const std::string &msg)
+            {"ALEEEEEEED", [this](UNUSED const std::string &msg)
                 {
                     _isFull = true;
                 }

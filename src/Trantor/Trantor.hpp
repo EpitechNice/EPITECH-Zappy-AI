@@ -16,6 +16,8 @@
 #include <map>
 #include <regex>
 
+#include "Macro.h"
+
 #define JOIN_GAME "WELCOME\n"
 #define KO "ko\n"
 #define DEAD "dead\n"
@@ -48,7 +50,8 @@ namespace IA {
             void dropAll(std::string inv);
             void goToTarget();
             void setTick(const int tick);
-            [[nodiscard]] bool handleBroadcast();
+            void findGuard();
+            bool handleBroadcast();
             [[nodiscard]] bool hasEnoughTicks() const;
             [[nodiscard]] bool checkFull() const;
             [[nodiscard]] bool tryBirth(bool &finished);
@@ -58,13 +61,17 @@ namespace IA {
             [[nodiscard]] int getNbFriends() const;
             [[nodiscard]] double progressionPercentage() const;
             [[nodiscard]] std::pair<int, Inventory> getTarget() const;
+
+            static void harvest(Trantor &trantor);
+            static void groupTrantor(Trantor &trantor);
         private:
             void _fillMoves(std::list<std::string> &res, int &currentX, int &currentY);
             void _applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb);
             void _manageObjective(bool eat);
             int _makeChoice(std::vector<std::pair<int, Inventory>> &res);
+            int _howMany();
             [[nodiscard]] std::queue<std::pair<int, std::string>> _removeUselessAled();
-            [[nodiscard]] bool _haveToMove(std::string &msg, const int dir, char *buf);
+            [[nodiscard]] bool _haveToMove(std::string &msg, int dir, char *buf);
         private:
             int _id;
             int _idMax;
