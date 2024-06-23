@@ -18,7 +18,7 @@ namespace IA {
         return _message.c_str();
     }
 
-    Trantor::Trantor()
+    Trantor::Trantor(): _inventory(false, false), _target(0, Inventory(false, false))
     {
         size_t longestAxis = std::max(_mapSize.first, _mapSize.second);
         double diag = std::ceil(longestAxis * std::sqrt(2)) + longestAxis;
@@ -131,7 +131,7 @@ namespace IA {
         std::vector<std::pair<int, Inventory>> res;
         int i = 0;
         while (std::regex_search(msg, match, regex)) {
-            res.emplace_back(std::pair(i, Inventory(match[1], true)));
+            res.emplace_back(std::pair(i, Inventory(match[1], true, false)));
             if (match[1].length()) {
                 msg = match.suffix();
             } else {
@@ -210,6 +210,56 @@ namespace IA {
             for (int i = 0; i < nbMoves; i++)
                 std::string msg = _communication->receiveData(true, 256);
         }
+    }
+
+    void Trantor::dropAll(std::string inv)
+    {
+        Inventory newInv(inv, false, false);
+
+        if (inv == "") {
+            doAction("Inventory");
+            inv = _communication->receiveData(true, 256);
+        }
+        if (newInv.isEmpty())
+            return;
+        for (auto const &[name, nb] : newInv) {
+            if (name == "food")
+                continue;
+            for (int i = 0; i < nb; i++) {
+                doAction("Set " + name);
+                std::string msg = _communication->receiveData(true, 256);
+                if (msg == OK)
+                    _inventory.remove(name);
+            }
+        }
+    }
+
+    bool Trantor::hasEnoughTicks() const
+    {
+        return _ticks >= _maxTicksNeeded;
+    }
+
+    bool Trantor::checkFull() const
+    {
+        return _inventory.isEnough();
+    }
+
+    bool Trantor::tryBirth(bool &finished)
+    {
+        if (_childsTarget == 0) {
+            finished = false;
+            return finished;
+        }
+        doAction("Fork");
+        std::string msg = _communication->receiveData(true, 256);
+        if (msg == OK) {
+            _nbChilds++;
+            _ticks -= 42;
+            _childsTarget--;
+            doAction("Broadcast J'ai fais un enfant", false);
+            return true;
+        }
+        return false;
     }
 
     void Trantor::goToTarget()
@@ -361,7 +411,7 @@ namespace IA {
     void Trantor::_manageObjective(bool eat)
     {
         std::string str = _worldInfo.find(",") == std::string::npos ? _worldInfo : _worldInfo.substr(0, _worldInfo.find(","));
-        Inventory cellInventory = Inventory(str, true);
+        Inventory cellInventory = Inventory(str, true, false);
 
         _target.second = cellInventory;
         if (eat) {

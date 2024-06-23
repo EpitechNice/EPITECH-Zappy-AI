@@ -45,9 +45,13 @@ namespace IA {
             void getFood(int nbFood);
             void waitOrders(std::string &msg, const std::string &waitingFor);
             void meetUp();
+            void dropAll(std::string inv);
             void goToTarget();
             void setTick(const int tick);
             [[nodiscard]] bool handleBroadcast();
+            [[nodiscard]] bool hasEnoughTicks() const;
+            [[nodiscard]] bool checkFull() const;
+            [[nodiscard]] bool tryBirth(bool &finished);
             [[nodiscard]] int updateObjectives();
             [[nodiscard]] int getNbrOfItemsNeeded(const std::string &itemName, int available) const;
             [[nodiscard]] int getTicks() const;

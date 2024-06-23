@@ -11,6 +11,9 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
+
+#include "Utils.hpp"
 
 namespace IA {
 
@@ -25,20 +28,24 @@ namespace IA {
 
     class Inventory {
         public:
-            Inventory(bool includeFood = false, bool includePlayers = false);
-            Inventory(const std::string &inv, bool includeFood = false, bool includePlayers = false);
+            Inventory(bool food, bool players);
+            Inventory(std::string inv, bool food, bool players);
             ~Inventory() = default;
 
-            void add(const std::string &item, int nb = 1);
-            int get(const std::string &elem) const;
+            void add(const std::string &elem, size_t nb = 1);
+            void remove(const std::string &elem, size_t nb = 1);
+            [[nodiscard]] bool isEmpty() const;
+            [[nodiscard]] bool isEnough() const;
+            [[nodiscard]] int get(const std::string &elem) const;
+            [[nodiscard]] int getNeededValue(const std::string &elem) const;
+            [[nodiscard]] double getTotalValue(const Inventory &inv) const;
             std::unordered_map<std::string, int>::iterator begin();
             std::unordered_map<std::string, int>::iterator end();
             std::unordered_map<std::string, int>::const_iterator begin() const;
             std::unordered_map<std::string, int>::const_iterator end() const;
-            int getNeededValue(const std::string &elem) const;
-            double getTotalValue(const Inventory &inv) const;
         private:
-            double _recalculateWeight(double x, double bias = 0.75) const;
+            void _quantitiveFilling(std::stringstream &inv, bool food, bool players);
+            double _recalculateWeight(double x) const;
         private:
             std::unordered_map<std::string, int> _inventory;
     };
