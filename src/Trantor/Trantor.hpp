@@ -61,6 +61,7 @@ namespace IA {
             [[nodiscard]] double progressionPercentage() const;
             [[nodiscard]] std::pair<int, Inventory> getTarget() const;
 
+            static void live(const int port, const std::string &team, const std::string &ip);
         private:
             void _fillMoves(std::list<std::string> &res, int &currentX, int &currentY);
             void _applyMove(std::list<std::string> &moves, const double nbSteps, int allMovesNb);
@@ -70,6 +71,9 @@ namespace IA {
             [[nodiscard]] std::queue<std::pair<int, std::string>> _removeUselessAled();
             [[nodiscard]] bool _haveToMove(std::string &msg, int dir, char *buf);
 
+            static void _childhood(Trantor &trantor, const int port, const std::string &team, const std::string &ip);
+            static void _adulthood(Trantor &trantor);
+            static void _elderhood(Trantor &trantor);
             static void _harvest(Trantor &trantor);
             static void _groupTrantor(Trantor &trantor);
             static void _guardsPos(Trantor &robot);

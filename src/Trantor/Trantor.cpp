@@ -83,6 +83,41 @@ namespace IA {
         return false;
     }
 
+    void Trantor::_childhood(Trantor &trantor, const int port, const std::string &team, const std::string &ip)
+    {
+        trantor.connectToServer(ip, port);
+        trantor.join(team);
+        _harvest(trantor);
+        while (!trantor.hasEnoughTicks())
+        {
+            trantor.handleBroadcast();
+            trantor.wander(true, true);
+        }
+        trantor.handleBroadcast();
+    }
+
+    void Trantor::_adulthood(Trantor &trantor)
+    {
+        if (trantor.getNbFriends() < 10)
+            _giveBirth(trantor);
+        _groupTrantor(trantor);
+        if (trantor.getNbFriends() >= 10) {
+            _guardsPos(trantor);
+            if ((trantor._idMax - trantor._id) < 4)
+                _guardAction(trantor);
+            else
+                _tryLvlUp(trantor, 4);
+        } else
+            _tryLvlUp(trantor, 0);
+    }
+
+    void Trantor::_elderhood(Trantor &trantor)
+    {
+        _clearComms(trantor);
+        for (;;)
+            trantor.wander(true, true);
+    }
+
     void Trantor::meetUp()
     {
         std::string msg = "";
@@ -163,6 +198,15 @@ namespace IA {
         return _target;
     }
 
+    void Trantor::live(const int port, const std::string &team, const std::string &ip)
+    {
+        Trantor trantor;
+
+        _childhood(trantor, port, team, ip);
+        _adulthood(trantor);
+        _elderhood(trantor);
+    }
+
     void Trantor::_harvest(Trantor &trantor)
     {
         trantor.doAction("Broadcast Faut loot un truc ?", false);
@@ -224,7 +268,7 @@ namespace IA {
     void Trantor::_clearComms(Trantor &trantor)
     {
         while (trantor._communication->nbBytesToRead() > 0)
-            trantor._communication->receiveData(true);
+            (void)trantor._communication->receiveData(true);
         trantor.clearQueue();
     }
 

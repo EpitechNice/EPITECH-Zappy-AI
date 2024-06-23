@@ -17,9 +17,7 @@ int main(int argc, char *argv[])
         IA::Parser::Arguments parsedArgs = IA::Parser::ParseArgs(argc, argv);
         if (!parsedArgs.initialized)
             return SUCCESS;
-        IA::Trantor trantor;
-        trantor.connectToServer(parsedArgs.machine, parsedArgs.port);
-        trantor.join(parsedArgs.name);
+        IA::Trantor::live(parsedArgs.port, parsedArgs.name, parsedArgs.machine);
     } catch (const IA::Parser::ParsingError &e) {
         std::cerr << RED << BOLD
                   << e.what() << RESET << std::endl;
