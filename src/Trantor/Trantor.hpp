@@ -12,6 +12,7 @@
 #include "Macro.h"
 
 #include <cmath>
+#include <iostream>
 #include <list>
 #include <functional>
 #include <map>

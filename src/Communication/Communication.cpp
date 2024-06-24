@@ -70,18 +70,23 @@ namespace IA {
 
     std::string Communication::receiveData(bool setInQueue, int tryAgain)
     {
-        char buffer[4096] = {0};
-        int valread = read(_socket, buffer, 4096);
         std::string str;
+        char c;
 
-        if (valread == -1 || tryAgain < 0)
+        while (true) {
+            if (read(_socket, &c, 1) < 0)
+                throw std::runtime_error("Error: read failed");
+            str += c;
+            if (c == '\n')
+                break;
+        }
+        if (tryAgain < 0)
             throw CommunicationError("Error: read failed");
-        str = std::string(buffer);
         if (str.find(DEAD_NO_BACKN) != std::string::npos)
             throw CommunicationError("Tranto has been killed");
         if (str.find("message ") != std::string::npos)
             return _handleMessage(setInQueue, tryAgain, str);
-        return std::string(buffer);
+        return str;
     }
 
     void Communication::sendData(const std::string &data)

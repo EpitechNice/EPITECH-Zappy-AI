@@ -32,7 +32,7 @@ namespace IA {
                 bool initialized = false;
                 int port;
                 std::string name;
-                std::string machine = "localhost";
+                std::string machine = "127.0.0.1";
             };
 
             [[nodiscard]] static Arguments ParseArgs(int argc, char **argv);

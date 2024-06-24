@@ -88,8 +88,7 @@ namespace IA {
         trantor.connectToServer(ip, port);
         trantor.join(team);
         _harvest(trantor);
-        while (!trantor.hasEnoughTicks())
-        {
+        while (!trantor.hasEnoughTicks()) {
             trantor.handleBroadcast();
             trantor.wander(true, true);
         }
@@ -209,7 +208,7 @@ namespace IA {
 
     void Trantor::_harvest(Trantor &trantor)
     {
-        trantor.doAction("Broadcast Faut loot un truc ?", false);
+        trantor.doAction("Broadcast Fautlootuntruc?", false);
         while (!trantor._isFull) {
             trantor.handleBroadcast();
             if (trantor.updateObjectives() == 0) {
@@ -247,12 +246,12 @@ namespace IA {
         trantor.clearQueue();
         if (id < 4) {
             for (int i = 0; i < id; i++)
-                trantor.waitOrders(msg, "Je vous protègerez");
+                trantor.waitOrders(msg, "Jevousprotègerez");
             trantor.findGuard();
-            trantor.doAction("Broadcast Je vous protègerez", false);
+            trantor.doAction("Broadcast Jevousprotègerez", false);
         } else {
             for (int i = 0; i < nbrOfBodyguards; i++)
-                trantor.waitOrders(msg, "Je vous protègerez");
+                trantor.waitOrders(msg, "Jevousprotègerez");
         }
     }
 
@@ -286,14 +285,14 @@ namespace IA {
                     msg.find("ko") == std::string::npos)
                     msg = trantor._communication->receiveData(true, 256);
             }
-            trantor.doAction("Broadcast Travail terminéééé", false);
+            trantor.doAction("Broadcast Travailterminéééé", false);
         } else {
             int lvl = 0;
             while (lvl < nbIncantations && !finished) {
                 std::string msg = trantor._communication->receiveData(false);
                 if (msg.find("message") != std::string::npos) {
                     msg = msg.substr(11);
-                    if (msg.find("Travail terminéééé") != std::string::npos)
+                    if (msg.find("Travailterminéééé") != std::string::npos)
                         finished = true;
                 }
                 if (msg.find("Current level:") != std::string::npos)
@@ -327,7 +326,7 @@ namespace IA {
             trantor.doAction("Fork", false);
             trantor._idMax++;
             trantor._id++;
-            trantor.doAction("Broadcast J'ai fais un enfant", false);
+            trantor.doAction("Broadcast J'aifaisunenfant", false);
         }
         while (trantor.getNbFriends() < 10) {
             trantor.handleBroadcast();
@@ -343,7 +342,6 @@ namespace IA {
     void Trantor::join(const std::string &team)
     {
         std::string data = _communication->receiveData(true, 256);
-
         if (data != JOIN_GAME)
             throw TrantorException("Invalid server response");
         _team = team;
@@ -362,8 +360,8 @@ namespace IA {
             throw TrantorException("Invalid map size format");
         if (sscanf(data.c_str(), "%zu %zu", &_mapSize.first, &_mapSize.second) != 2)
             throw TrantorException("Invalid map size format");
-        doAction("Broadcast Je suis seul", false);
-        doAction("Broadcast Mon ID max est " + std::to_string(_id), false);
+        doAction("Broadcast Jesuisseul", false);
+        doAction("Broadcast MonIDmaxest" + std::to_string(_id), false);
     }
 
     void Trantor::_fillMoves(std::list<std::string> &res, int &currentX, int &currentY)
@@ -442,7 +440,7 @@ namespace IA {
             _nbChilds++;
             _ticks -= 42;
             _childsTarget--;
-            doAction("Broadcast J'ai fais un enfant", false);
+            doAction("Broadcast J'aifaisunenfant", false);
             return true;
         }
         return false;
@@ -526,7 +524,7 @@ namespace IA {
             wander(true, true);
         }
         _enoughFriends = true;
-        doAction("Broadcast Tous le monde est là", false);
+        doAction("Broadcast Touslemondeestlà", false);
     }
 
     void Trantor::findGuard()
@@ -598,7 +596,7 @@ namespace IA {
                 auto msg = _communication->receiveData(true, 256);
                 if (msg == OK) {
                     _inventory.add(elem.first);
-                    doAction("Broadcast J'ai loot du " + elem.first, false);
+                    doAction("Broadcast J'ailootdu" + elem.first, false);
                     if (progressionPercentage() >= 1.0) {
                         _isFull = true;
                         return;
@@ -664,74 +662,74 @@ namespace IA {
     bool Trantor::handleBroadcast()
     {
         static const std::unordered_map<std::string, std::function<void(const std::string &msg)>> actions = {
-            {"Travail terminéééé", [this](UNUSED const std::string &msg)
+            {"Travailterminéééé", [this](UNUSED const std::string &msg)
                 {
                    _isFull = true;
                    _isRetired = true;
                 }
             },
-            {"Faut faire des gosses ?", [this](UNUSED const std::string &msg)
+            {"Fautfairedesgosses?", [this](UNUSED const std::string &msg)
                 {
                     if (!_childsTarget) {
-                        doAction("Broadcast C'est bon on a les allocs !", false);
+                        doAction("Broadcast C'estbononalesallocs!", false);
                     } else {
                         int remains = std::min(0, 12 - (11 - _maxSlots + _childsTarget));
                         remains = std::max(0, remains);
-                        doAction("Broadcast Toujours plus il manque " + std::to_string(remains) + " gosses !", false);
+                        doAction("Broadcast Toujoursplusilmanque" + std::to_string(remains), false);
                     }
                 }
             },
-            {"Tous le monde est là", [this](UNUSED const std::string &msg)
+            {"Touslemondeestlà", [this](UNUSED const std::string &msg)
                 {
                     _enoughFriends = true;
                 }
             },
-            {"Mon ID max est ", [this](const std::string &msg)
+            {"MonIDmaxest", [this](const std::string &msg)
                 {
-                    int tmpMaxInt = std::atoi(msg.c_str() + 15);
+                    int tmpMaxInt = std::atoi(msg.c_str() + 12);
 
                     if (tmpMaxInt >= _idMax) {
                         _idMax = tmpMaxInt;
                     } else {
-                        doAction("Broadcast T'es tarpin con c'est " + std::to_string(_idMax), false);
+                        doAction("Broadcast T'estarpinconc'est" + std::to_string(_idMax), false);
                     }
                 }
             },
-            {"T'es tarpin con c'est ", [this](const std::string &msg)
+            {"T'estarpinconc'est", [this](const std::string &msg)
                 {
-                    int tmpMaxInt = std::atoi(msg.c_str() + 22);
+                    int tmpMaxInt = std::atoi(msg.c_str() + 19);
 
                     _idMax = std::max(_idMax, tmpMaxInt);
                 }
             },
-            {"Je suis seul", [this](UNUSED const std::string &msg)
+            {"Jesuisseul", [this](UNUSED const std::string &msg)
                 {
                     _nbFriends++;
                     if (_nbFriends > 1) {
-                        doAction("Broadcast Tu dis du n'importe quoi on est " + std::to_string(_nbFriends), false);
+                        doAction("Broadcast Tudisdun'importequoionest" + std::to_string(_nbFriends), false);
                     }
                 }
             },
-            {"Tu dis du n'importe quoi on est ", [this](const std::string &msg)
+            {"Tudisdun'importequoionest", [this](const std::string &msg)
                 {
-                    size_t tmp = std::atoi(msg.c_str() + 32);
+                    size_t tmp = std::atoi(msg.c_str() + 26);
 
                     _nbFriends = std::max(_nbFriends, tmp);
                 }
             },
-            {"C'est bon on a les allocs !", [this](UNUSED const std::string &msg)
+            {"C'estbononalesallocs!", [this](UNUSED const std::string &msg)
                 {
                     _childsTarget = 0;
                 }
             },
-            {"Toujours plus il manque ", [this](const std::string &msg)
+            {"Toujoursplusilmanque", [this](const std::string &msg)
                 {
-                    _childsTarget = std::atoi(msg.c_str() + 24);
+                    _childsTarget = std::atoi(msg.c_str() + 21);
                 }
             },
-            {"J'ai loot du ", [this](const std::string &msg)
+            {"J'ailootdu", [this](const std::string &msg)
                 {
-                    std::string elem = msg.substr(13);
+                    std::string elem = msg.substr(11);
 
                     _inventory.add(elem);
                     if (progressionPercentage() >= 1.0) {
@@ -739,16 +737,15 @@ namespace IA {
                     }
                 }
             },
-            {"On a ce qui faut", [this](UNUSED const std::string &msg)
+            {"Onacequifaut", [this](UNUSED const std::string &msg)
                 {
                     _isFull = true;
                 }
             },
-            {"Faut loot un truc ?", [this](UNUSED const std::string &msg)
+            {"Fautlootuntruc?", [this](UNUSED const std::string &msg)
                 {
-                    if (_isFull) {
-                        doAction("Broadcast On a ce qui faut", false);
-                    }
+                    if (_isFull)
+                        doAction("Broadcast Onacequifaut", false);
                 }
             },
             {"Coucou", [this](UNUSED const std::string &msg)
@@ -757,7 +754,7 @@ namespace IA {
                         _onSamePlace++;
                 }
             },
-            {"J'ai fais un enfant", [this](UNUSED const std::string &msg)
+            {"J'aifaisunenfant", [this](UNUSED const std::string &msg)
                 {
                     _id++;
                     _idMax++;
@@ -773,8 +770,8 @@ namespace IA {
         while (!_queue.empty()) {
             auto &[soudDir, msg] = _queue.back();
             _queue.pop();
-            std::string message = msg.replace(msg.find('\n'), 1, "").c_str() + 11;
-            if (message.find("J'ai loot du ") != std::string::npos) {
+            std::string message = msg.find('\n') != std::string::npos ? msg.replace(msg.find('\n'), 1, "").c_str() + 11 : msg;
+            if (message.find("J'ailootdu") != std::string::npos) {
                 std::string elem = message.substr(13);
                 _inventory.add(elem);
                 if (progressionPercentage() >= 1.0)
