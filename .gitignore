@@ -3,3 +3,5 @@ zappy_ai
 *.gcda
 *.gcno
 *~
+.vscode/
+.idea/
